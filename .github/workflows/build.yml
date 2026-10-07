@@ -2,7 +2,7 @@
 # If the checksum completes, the script then sets up the JDK we need and begins compiling the software,
 # Finally, If the compiled files have been pushed out to the "(something)/build/libs/" directory - It gets uploaded to GitHub.
 
-name: Build PFM using Gradle
+name: Build Paladins Festivities using Gradle
 on: [pull_request, push]
 
 jobs:
