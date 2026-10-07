@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "paladinsfestivities",
+  "version": "${version}",
+  "name": "Paladin's Festivities",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/paladinsfestivities/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.unlikepaladin.pfest.fabric.PaladinFestivitiesModFabric"
+    ],
+    "client": [
+      "com.unlikepaladin.pfest.fabric.client.PaladinFestivitiesModFabricClient"
+    ]
+  },
+  "mixins": [
+    "paladinsfestivities.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~1.17.1",
+    "java": ">=16",
+    "fabric": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
