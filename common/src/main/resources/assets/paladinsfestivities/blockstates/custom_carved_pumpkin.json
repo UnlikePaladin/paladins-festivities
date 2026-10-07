@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,lit=false": { "model": "paladinsfestivities:block/custom_carved_pumpkin" },
+    "facing=south,lit=false": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 180 },
+    "facing=west,lit=false": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 270 },
+    "facing=east,lit=false": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 90 },
+    "facing=north,lit=true": { "model": "paladinsfestivities:block/custom_carved_pumpkin" },
+    "facing=south,lit=true": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 180 },
+    "facing=west,lit=true": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 270 },
+    "facing=east,lit=true": { "model": "paladinsfestivities:block/custom_carved_pumpkin", "y": 90 }
+  }
+}

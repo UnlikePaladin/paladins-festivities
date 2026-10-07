@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "paladinsfestivities:block/pumpkin_carving_station" },
+    "facing=south": { "model": "paladinsfestivities:block/pumpkin_carving_station", "y": 180 },
+    "facing=west": { "model": "paladinsfestivities:block/pumpkin_carving_station", "y": 270 },
+    "facing=east": { "model": "paladinsfestivities:block/pumpkin_carving_station", "y": 90 }
+  }
+}
