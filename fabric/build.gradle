@@ -28,6 +28,17 @@ configurations {
     }
 }
 
+repositories {
+    maven {
+        name = "Curse Maven"
+        url = "https://cursemaven.com"
+        content {
+            includeGroup("curse.maven")
+        }
+    }
+}
+
+
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
@@ -36,6 +47,9 @@ dependencies {
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+
+    // thanks glfw and apple
+    modRuntimeOnly "curse.maven:chameleon-dock-597393:3723225"
 }
 
 processResources {

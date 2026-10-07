@@ -2,7 +2,9 @@ package com.unlikepaladin.pfest.forge.client;
 
 import com.unlikepaladin.pfest.PaladinFestivitiesMod;
 import com.unlikepaladin.pfest.client.PaladinFestivitiesModClient;
+import com.unlikepaladin.pfest.registry.client.forge.BlockEntityRendererRegistryImpl;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -12,9 +14,13 @@ public final class PaladinFestivitiesModForgeClient {
     public PaladinFestivitiesModForgeClient() {
     }
 
-
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(PaladinFestivitiesModClient::clientInit);
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        BlockEntityRendererRegistryImpl.registerRenderers(event);
     }
 }

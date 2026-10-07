@@ -7,11 +7,18 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class BlockEntityRegistryImpl {
-    public static DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, PaladinFestivitiesMod.MOD_ID);
-    public static <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlock(String name, BlockEntityType.BlockEntitySupplier<T> supplier, Block[] blocks) {
-        return BLOCK_ENTITY_TYPES.register(name, () -> BlockEntityType.Builder.of(supplier, blocks).build(null));
+    public static DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
+            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, PaladinFestivitiesMod.MOD_ID);
+
+    @SafeVarargs
+    public static <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntity(String name, BlockEntityType.BlockEntitySupplier<T> supplier, Supplier<? extends Block>... validBlocks) {
+        return BLOCK_ENTITY_TYPES.register(name, () -> {
+            Block[] blocks = Arrays.stream(validBlocks).map(Supplier::get).toArray(Block[]::new);
+            return BlockEntityType.Builder.of(supplier, blocks).build(null);
+        });
     }
 }

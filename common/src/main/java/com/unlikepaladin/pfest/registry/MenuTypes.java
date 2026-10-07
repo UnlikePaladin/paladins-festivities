@@ -12,6 +12,6 @@ public class MenuTypes {
     }
 
     public static Supplier<MenuType<PumpkinCarvingMenu>> PUMPKIN_MENU =
-            MenuRegistry.registerScreenHandlerSimple("pumpkin_carving_station", PumpkinCarvingMenu::new);
+            MenuRegistry.registerScreenHandlerExtended("pumpkin_carving_station", PumpkinCarvingMenu::new);
 
 }

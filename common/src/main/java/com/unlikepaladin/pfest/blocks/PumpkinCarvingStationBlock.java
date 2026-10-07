@@ -1,8 +1,13 @@
 package com.unlikepaladin.pfest.blocks;
 
 import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
+import com.unlikepaladin.pfest.items.CustomCarvedPumpkinItem;
+import com.unlikepaladin.pfest.menu.MenuHelper;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -15,6 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -22,8 +28,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 public class PumpkinCarvingStationBlock extends HorizontalDirectionalBlock implements EntityBlock {
-    public PumpkinCarvingStationBlock(Properties properties) {
+    public PumpkinCarvingStationBlock(BlockBehaviour.Properties properties) {
         super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(BlockStateProperties.OCCUPIED, false));
     }
 
     @Override
@@ -34,38 +41,59 @@ public class PumpkinCarvingStationBlock extends HorizontalDirectionalBlock imple
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        return this.defaultBlockState().setValue(FACING, blockPlaceContext.getHorizontalDirection().getOpposite());
+        return this.defaultBlockState()
+                .setValue(FACING, blockPlaceContext.getHorizontalDirection().getOpposite())
+                .setValue(BlockStateProperties.OCCUPIED, false);
     }
 
     @Override
     public InteractionResult use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
-        ItemStack stack =  player.getItemInHand(interactionHand);
-        PumpkinCarvingStationBlockEntity carvingStationBlock = level.getBlockEntity(blockPos)
-                instanceof PumpkinCarvingStationBlockEntity bE ? bE : null;
-        if (carvingStationBlock != null && carvingStationBlock.hasPumpkin() && player.getItemInHand(interactionHand).isEmpty()) {
-            ItemStack pumpkin = carvingStationBlock.getHeldPumpkin();
-            carvingStationBlock.setHeldPumpkin(ItemStack.EMPTY);
-            player.setItemInHand(interactionHand, pumpkin);
-            return InteractionResult.CONSUME;
-        } else if (stack.getItem() == Items.PUMPKIN) {
-            ItemStack placed = stack.split(1);
-            if (carvingStationBlock != null) {
-                carvingStationBlock.setHeldPumpkin(placed);
+        if (level.getBlockEntity(blockPos) instanceof PumpkinCarvingStationBlockEntity carvingStation) {
+            ItemStack stack = player.getItemInHand(interactionHand);
+
+            // Pop out pumpkin: sneak + right click with empty hand
+            if (player.isShiftKeyDown() && stack.isEmpty() && carvingStation.hasPumpkin()) {
+                if (!level.isClientSide) {
+                    carvingStation.popPumpkin(player, interactionHand);
+                    level.playSound(null, blockPos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1.0F, 1.0F);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
             }
-            return InteractionResult.SUCCESS;
+
+            // Place pumpkin onto station
+            if (!carvingStation.hasPumpkin() && (stack.is(Items.PUMPKIN) || stack.getItem() instanceof CustomCarvedPumpkinItem)) {
+                if (!level.isClientSide) {
+                    ItemStack placed = stack.split(1);
+                    carvingStation.setHeldPumpkin(placed);
+                    level.playSound(null, blockPos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1.0F, 1.0F);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
+
+            // Open screen if occupied by pumpkin
+            if (carvingStation.hasPumpkin()) {
+                if (blockState.getValue(BlockStateProperties.OCCUPIED)) {
+                    // Already in use by another player
+                    return InteractionResult.CONSUME;
+                }
+                if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+                    level.setBlock(blockPos, blockState.setValue(BlockStateProperties.OCCUPIED, true), 3);
+                    MenuHelper.openPumpkinCarvingMenu(serverPlayer, carvingStation);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
         }
 
-        if (level.isClientSide) {
-            openCarvingScreen(pos, station.getHeldPumpkin());
-        }
-        return super.use(blockState, level, blockPos, player, interactionHand, blockHitResult);
+        return InteractionResult.PASS;
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof PumpkinCarvingStationBlockEntity station) {
-                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), station.getHeldPumpkin());
+                if (station.hasPumpkin()) {
+                    Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), station.getHeldPumpkin());
+                }
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }

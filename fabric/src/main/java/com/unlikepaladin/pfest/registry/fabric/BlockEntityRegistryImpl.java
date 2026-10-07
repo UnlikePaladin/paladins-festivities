@@ -7,10 +7,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class BlockEntityRegistryImpl {
-    public static <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlock(String name, BlockEntityType.BlockEntitySupplier<T> supplier, Block[] blocks) {
+    @SafeVarargs
+    public static <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntity(String name, BlockEntityType.BlockEntitySupplier<T> supplier, Supplier<? extends Block>... validBlocks) {
+        Block[] blocks = Arrays.stream(validBlocks).map(Supplier::get).toArray(Block[]::new);
         BlockEntityType<T> blockEntityType = Registry.register(
                 Registry.BLOCK_ENTITY_TYPE,
                 new ResourceLocation(PaladinFestivitiesMod.MOD_ID, name),
