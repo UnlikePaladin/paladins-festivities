@@ -2,6 +2,7 @@ package com.unlikepaladin.pfest.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.unlikepaladin.pfest.client.render.CarvedPumpkinTextureManager;
 import com.unlikepaladin.pfest.data.CarvedPumpkinData;
 import com.unlikepaladin.pfest.menu.PumpkinCarvingMenu;
 import com.unlikepaladin.pfest.network.NetworkPlatform;
@@ -115,20 +116,21 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         int res = data.getResolution();
         int cellSize = canvasSize / res;
 
-        // Render carved pixels on top of the pumpkin texture with top/left shadow bevel
+        // Render carved pixels on top of the pumpkin texture
         int unlitBase = 0xFF441300;
         int unlitShadow = 0xFF2D0003;
-        int litBase = 0xFFFFE240;
-        int litShadow = 0xFFE5881C;
 
         for (int y = 0; y < res; y++) {
             for (int x = 0; x < res; x++) {
                 if (data.isCarved(this.currentFace, x, y)) {
-                    boolean topUncarved = (y == 0 || !data.isCarved(this.currentFace, x, y - 1));
-                    boolean leftUncarved = (x == 0 || !data.isCarved(this.currentFace, x - 1, y));
-                    int pixelColor = this.previewLit
-                            ? (topUncarved || leftUncarved ? litShadow : litBase)
-                            : (topUncarved || leftUncarved ? unlitShadow : unlitBase);
+                    int pixelColor;
+                    if (this.previewLit) {
+                        pixelColor = CarvedPumpkinTextureManager.getLitPixelArgb(x, y, res);
+                    } else {
+                        boolean topUncarved = (y == 0 || !data.isCarved(this.currentFace, x, y - 1));
+                        boolean leftUncarved = (x == 0 || !data.isCarved(this.currentFace, x - 1, y));
+                        pixelColor = (topUncarved || leftUncarved) ? unlitShadow : unlitBase;
+                    }
                     fill(poseStack, canvasX + x * cellSize, canvasY + y * cellSize, canvasX + (x + 1) * cellSize, canvasY + (y + 1) * cellSize, pixelColor);
                 }
             }
