@@ -21,12 +21,14 @@ public class CarvedPumpkinTextureManager {
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation, DynamicTexture> DYNAMIC_TEXTURES = new ConcurrentHashMap<>();
 
-    // Unlit tone: #120C06 (dark warm brown/cavity)
+    // Unlit tones: #441300 cavity base, #2D0003 deep top/left shadow (matching vanilla carved_pumpkin)
     // Format in NativeImage.combine is (alpha, blue, green, red)
-    private static final int UNLIT_COLOR = NativeImage.combine(255, 0x06, 0x0C, 0x12);
+    private static final int UNLIT_BASE_COLOR   = NativeImage.combine(255, 0x00, 0x13, 0x44);
+    private static final int UNLIT_SHADOW_COLOR = NativeImage.combine(255, 0x03, 0x00, 0x2D);
 
-    // Lit tone: #FFE240 (warm luminous yellow)
-    private static final int LIT_COLOR = NativeImage.combine(255, 0x40, 0xE2, 0xFF);
+    // Lit tones: #FFE240 luminous yellow base, #E5881C warm shaded amber top/left shadow
+    private static final int LIT_BASE_COLOR     = NativeImage.combine(255, 0x40, 0xE2, 0xFF);
+    private static final int LIT_SHADOW_COLOR   = NativeImage.combine(255, 0x1C, 0x88, 0xE5);
 
     public static ResourceLocation getOrCreateTexture(CarvedPumpkinData data, int faceIndex, boolean isLit) {
         byte[] faceBytes = data.getFaceBytes(faceIndex);
@@ -36,12 +38,16 @@ public class CarvedPumpkinTextureManager {
 
         return TEXTURE_CACHE.computeIfAbsent(key, k -> {
             NativeImage image = new NativeImage(NativeImage.Format.RGBA, res, res, false);
-            int activeColor = isLit ? LIT_COLOR : UNLIT_COLOR;
 
             for (int y = 0; y < res; y++) {
                 for (int x = 0; x < res; x++) {
                     if (data.isCarved(faceIndex, x, y)) {
-                        image.setPixelRGBA(x, y, activeColor);
+                        boolean topUncarved = (y == 0 || !data.isCarved(faceIndex, x, y - 1));
+                        boolean leftUncarved = (x == 0 || !data.isCarved(faceIndex, x - 1, y));
+                        int pixelColor = isLit
+                                ? (topUncarved || leftUncarved ? LIT_SHADOW_COLOR : LIT_BASE_COLOR)
+                                : (topUncarved || leftUncarved ? UNLIT_SHADOW_COLOR : UNLIT_BASE_COLOR);
+                        image.setPixelRGBA(x, y, pixelColor);
                     } else {
                         image.setPixelRGBA(x, y, 0); // transparent
                     }
