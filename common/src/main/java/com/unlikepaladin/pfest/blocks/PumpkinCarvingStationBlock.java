@@ -1,8 +1,11 @@
 package com.unlikepaladin.pfest.blocks;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
 import com.unlikepaladin.pfest.items.CustomCarvedPumpkinItem;
 import com.unlikepaladin.pfest.menu.MenuHelper;
+import com.unlikepaladin.pfest.utilities.PFMShapeUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,6 +18,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -25,7 +29,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PumpkinCarvingStationBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public PumpkinCarvingStationBlock(BlockBehaviour.Properties properties) {
@@ -102,5 +112,16 @@ public class PumpkinCarvingStationBlock extends HorizontalDirectionalBlock imple
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new PumpkinCarvingStationBlockEntity(blockPos, blockState);
+    }
+
+    protected static final Map<Direction, VoxelShape> SHAPES = Maps.newHashMap(ImmutableMap.of(
+            Direction.NORTH, Shapes.or(box(1, 0, 1, 15, 13, 15), box(0, 13, 0, 16, 16, 16))
+    ));
+
+    @Override
+    public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
+        return SHAPES.computeIfAbsent(blockState.getValue(FACING), direction ->
+                PFMShapeUtil.rotateShape(Direction.NORTH, direction, SHAPES.get(Direction.NORTH))
+        );
     }
 }
