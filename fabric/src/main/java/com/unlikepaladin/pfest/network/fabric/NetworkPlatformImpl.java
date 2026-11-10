@@ -26,4 +26,11 @@ public class NetworkPlatformImpl {
         buf.writeBlockPos(pos);
         ClientPlayNetworking.send(FabricNetworkHandler.FINISH_CARVE_ID, buf);
     }
+
+    public static void sendRotationToServer(BlockPos pos, float angle) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeBlockPos(pos);
+        buf.writeFloat(angle);
+        ClientPlayNetworking.send(FabricNetworkHandler.ROTATION_ID, buf);
+    }
 }

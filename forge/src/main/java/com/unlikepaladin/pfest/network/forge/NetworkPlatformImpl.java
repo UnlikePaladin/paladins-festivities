@@ -14,4 +14,8 @@ public class NetworkPlatformImpl {
     public static void sendFinishCarveToServer(BlockPos pos) {
         ForgeNetworkHandler.CHANNEL.sendToServer(new ForgeNetworkHandler.FinishCarvePacket(pos));
     }
+
+    public static void sendRotationToServer(BlockPos pos, float angle) {
+        ForgeNetworkHandler.CHANNEL.sendToServer(new ForgeNetworkHandler.RotationPacket(pos, angle));
+    }
 }

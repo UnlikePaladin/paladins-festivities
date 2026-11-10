@@ -23,7 +23,8 @@
     ]
   },
   "mixins": [
-    "paladinsfestivities.mixins.json"
+    "paladinsfestivities.mixins.json",
+    "paladinsfestivities-fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.19.5",

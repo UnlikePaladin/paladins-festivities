@@ -51,4 +51,15 @@ public class ServerPacketHandler {
             }
         }
     }
+
+    public static void handleRotation(ServerPlayer player, BlockPos pos, float angle) {
+        if (player == null || player.level == null) return;
+        if (player.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) > 64.0D) {
+            return;
+        }
+        if (player.level.getBlockEntity(pos) instanceof PumpkinCarvingStationBlockEntity station) {
+            station.setTurntableTarget(angle);
+            station.setChanged();
+        }
+    }
 }

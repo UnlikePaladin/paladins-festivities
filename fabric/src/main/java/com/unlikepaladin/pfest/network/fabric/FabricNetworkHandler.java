@@ -10,6 +10,7 @@ public class FabricNetworkHandler {
     public static final ResourceLocation CARVE_ID = new ResourceLocation(PaladinFestivitiesMod.MOD_ID, "carve");
     public static final ResourceLocation OCCUPIED_ID = new ResourceLocation(PaladinFestivitiesMod.MOD_ID, "occupied");
     public static final ResourceLocation FINISH_CARVE_ID = new ResourceLocation(PaladinFestivitiesMod.MOD_ID, "finish_carve");
+    public static final ResourceLocation ROTATION_ID = new ResourceLocation(PaladinFestivitiesMod.MOD_ID, "rotation");
 
     public static void init() {
         ServerPlayNetworking.registerGlobalReceiver(CARVE_ID, (server, player, handler, buf, responseSender) -> {
@@ -28,6 +29,12 @@ public class FabricNetworkHandler {
         ServerPlayNetworking.registerGlobalReceiver(FINISH_CARVE_ID, (server, player, handler, buf, responseSender) -> {
             BlockPos pos = buf.readBlockPos();
             server.execute(() -> ServerPacketHandler.handleFinishCarve(player, pos));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(ROTATION_ID, (server, player, handler, buf, responseSender) -> {
+            BlockPos pos = buf.readBlockPos();
+            float angle = buf.readFloat();
+            server.execute(() -> ServerPacketHandler.handleRotation(player, pos, angle));
         });
     }
 }

@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
@@ -26,8 +27,92 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
     private ItemStack heldPumpkin = ItemStack.EMPTY;
     private final CarvedPumpkinData data = new CarvedPumpkinData();
 
+    // Client-side turntable rotation for hybrid in-world carving
+    private float oTurntableAngle = 0.0F;
+    private float turntableAngle = 0.0F;
+    private float targetTurntableAngle = 0.0F;
+    private boolean previewLit = false;
+
+    // Client-side hover selection preview for in-world snapping box
+    private int hoverFace = -1;
+    private int hoverPixelX = -1;
+    private int hoverPixelY = -1;
+    private int hoverBrushSize = 1;
+    private boolean hoverErase = false;
+
+    public void setHoverInfo(int face, int px, int py, int brushSize, boolean erase) {
+        this.hoverFace = face;
+        this.hoverPixelX = px;
+        this.hoverPixelY = py;
+        this.hoverBrushSize = brushSize;
+        this.hoverErase = erase;
+    }
+
+    public void clearHoverInfo() {
+        this.hoverFace = -1;
+    }
+
+    public boolean hasHoverInfo() {
+        return this.hoverFace >= 0;
+    }
+
+    public int getHoverFace() { return this.hoverFace; }
+    public int getHoverPixelX() { return this.hoverPixelX; }
+    public int getHoverPixelY() { return this.hoverPixelY; }
+    public int getHoverBrushSize() { return this.hoverBrushSize; }
+    public boolean isHoverErase() { return this.hoverErase; }
+
     public PumpkinCarvingStationBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PUMPKIN_CARVING_STATION.get(), pos, state);
+    }
+
+    public boolean isPreviewLit() {
+        return this.previewLit;
+    }
+
+    public void setPreviewLit(boolean previewLit) {
+        this.previewLit = previewLit;
+    }
+
+    public float getTargetTurntableAngle() {
+        return this.targetTurntableAngle;
+    }
+
+    public void rotateTurntable(float deltaDegrees) {
+        this.targetTurntableAngle += deltaDegrees;
+        this.turntableAngle = this.targetTurntableAngle;
+        this.oTurntableAngle = this.targetTurntableAngle;
+    }
+
+    public void rotateTurntableSnapped(boolean right) {
+        int currentFace = Math.round(this.targetTurntableAngle / 90.0F);
+        this.targetTurntableAngle = (currentFace + (right ? 1 : -1)) * 90.0F;
+    }
+
+    public void setTurntableTarget(float targetAngle) {
+        this.targetTurntableAngle = targetAngle;
+    }
+
+    public int getActiveFaceIndex() {
+        return Math.floorMod((int) Math.round(this.targetTurntableAngle / 90.0F), 4);
+    }
+
+    public void clientTick() {
+        this.oTurntableAngle = this.turntableAngle;
+        float diff = this.targetTurntableAngle - this.turntableAngle;
+        if (Math.abs(diff) > 0.05F) {
+            this.turntableAngle += diff * 0.3F;
+        } else {
+            this.turntableAngle = this.targetTurntableAngle;
+        }
+    }
+
+    public float getRenderTurntableAngle() {
+        return this.turntableAngle;
+    }
+
+    public float getRenderTurntableAngle(float partialTicks) {
+        return Mth.lerp(partialTicks, this.oTurntableAngle, this.turntableAngle);
     }
 
     public ItemStack getHeldPumpkin() {
@@ -103,6 +188,7 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
             tag.put("PumpkinItem", this.heldPumpkin.save(new CompoundTag()));
         }
         this.data.saveToNbt(tag);
+        tag.putFloat("PumpkinAngle", this.targetTurntableAngle);
         return tag;
     }
 
@@ -115,6 +201,14 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
             this.heldPumpkin = ItemStack.EMPTY;
         }
         this.data.loadFromNbt(tag);
+        if (tag.contains("PumpkinAngle", 99)) {
+            float angle = tag.getFloat("PumpkinAngle");
+            this.targetTurntableAngle = angle;
+            if (this.level == null) {
+                this.turntableAngle = angle;
+                this.oTurntableAngle = angle;
+            }
+        }
     }
 
     @Override

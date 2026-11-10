@@ -24,6 +24,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import com.unlikepaladin.pfest.registry.ModBlockEntities;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -112,6 +115,19 @@ public class PumpkinCarvingStationBlock extends HorizontalDirectionalBlock imple
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new PumpkinCarvingStationBlockEntity(blockPos, blockState);
+    }
+
+    @Nullable
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> blockEntityType) {
+        return level.isClientSide && blockEntityType == ModBlockEntities.PUMPKIN_CARVING_STATION.get()
+                ? (lvl, pos, st, be) -> {
+                    if (be instanceof PumpkinCarvingStationBlockEntity station) {
+                        station.clientTick();
+                    }
+                }
+                : null;
     }
 
     protected static final Map<Direction, VoxelShape> SHAPES = Maps.newHashMap(ImmutableMap.of(

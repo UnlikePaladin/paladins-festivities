@@ -34,6 +34,19 @@ public class CarvedPumpkinTextureManager {
     // Fallback lit tone: #FFE240 luminous yellow
     private static final int LIT_FALLBACK_COLOR = NativeImage.combine(255, 0x40, 0xE2, 0xFF);
 
+    private static ResourceLocation WHITE_TEXTURE = null;
+
+    public static ResourceLocation getWhiteTexture() {
+        if (WHITE_TEXTURE == null) {
+            NativeImage img = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
+            img.setPixelRGBA(0, 0, 0xFFFFFFFF);
+            DynamicTexture dt = new DynamicTexture(img);
+            WHITE_TEXTURE = new ResourceLocation(PaladinFestivitiesMod.MOD_ID, "dynamic/white_pixel");
+            Minecraft.getInstance().getTextureManager().register(WHITE_TEXTURE, dt);
+        }
+        return WHITE_TEXTURE;
+    }
+
     public static synchronized NativeImage getLitTemplate() {
         if (litTemplate == null) {
             try {

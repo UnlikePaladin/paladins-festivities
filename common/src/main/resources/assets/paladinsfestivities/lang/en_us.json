@@ -2,5 +2,37 @@
   "block.paladinsfestivities.pumpkin_carving_station": "Pumpkin Carving Station",
   "block.paladinsfestivities.custom_carved_pumpkin": "Carved Pumpkin",
   "item.paladinsfestivities.custom_carved_pumpkin": "Carved Pumpkin",
-  "container.paladinsfestivities.pumpkin_carving_station": "Pumpkin Carving Station"
+  "container.paladinsfestivities.pumpkin_carving_station": "Pumpkin Carving Station",
+
+  "gui.paladinsfestivities.pumpkin_carving.title": "Pumpkin Carving Table",
+  "gui.paladinsfestivities.pumpkin_carving.face.front": "Front Face",
+  "gui.paladinsfestivities.pumpkin_carving.face.right": "Right Face",
+  "gui.paladinsfestivities.pumpkin_carving.face.back": "Back Face",
+  "gui.paladinsfestivities.pumpkin_carving.face.left": "Left Face",
+  "gui.paladinsfestivities.pumpkin_carving.face_indicator": "%1$s (%2$s/4)",
+
+  "gui.paladinsfestivities.pumpkin_carving.tool.knife": "Knife",
+  "gui.paladinsfestivities.pumpkin_carving.tool.scoop": "Scoop",
+  "gui.paladinsfestivities.pumpkin_carving.tool.brush": "%1$sx%1$s",
+  "gui.paladinsfestivities.pumpkin_carving.tool.lit": "Lit",
+  "gui.paladinsfestivities.pumpkin_carving.tool.unlit": "Unlit",
+
+  "gui.paladinsfestivities.pumpkin_carving.finish": "FINISH",
+  "gui.paladinsfestivities.pumpkin_carving.finish.desc": "Carve Pumpkin",
+
+  "gui.paladinsfestivities.pumpkin_carving.controls.title": "Controls",
+  "gui.paladinsfestivities.pumpkin_carving.controls.carve": "- Left Click: Carve",
+  "gui.paladinsfestivities.pumpkin_carving.controls.spin": "- Right Drag: Spin",
+  "gui.paladinsfestivities.pumpkin_carving.controls.turn": "- %1$s / %2$s: Turn Face",
+  "gui.paladinsfestivities.pumpkin_carving.controls.tools": "- %1$s - %2$s: Tools",
+  "gui.paladinsfestivities.pumpkin_carving.controls.exit": "- ESC: Exit",
+
+  "keybindings.category.paladinsfestivities": "Paladin's Festivities",
+  "key.paladinsfestivities.rotateTurnTableLeft": "Turn Face Left",
+  "key.paladinsfestivities.rotateTurnTableRight": "Turn Face Right",
+  "key.paladinsfestivities.carveToolKnife": "Select Knife (Carve)",
+  "key.paladinsfestivities.carveToolScoop": "Select Scoop (Erase)",
+  "key.paladinsfestivities.carveBrushSize": "Cycle Brush Size",
+  "key.paladinsfestivities.carveToggleLit": "Toggle Lit Preview",
+  "key.paladinsfestivities.carveToggleControls": "Toggle Controls Guide"
 }

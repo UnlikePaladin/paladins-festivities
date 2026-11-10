@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.unlikepaladin.pfest.fabric.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "client": [
+    "KeyMappingAccessor",
+    "KeyMappingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -2,38 +2,115 @@ package com.unlikepaladin.pfest.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.unlikepaladin.pfest.client.render.CarvedPumpkinTextureManager;
+import com.unlikepaladin.pfest.blocks.PumpkinCarvingStationBlock;
+import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
 import com.unlikepaladin.pfest.data.CarvedPumpkinData;
 import com.unlikepaladin.pfest.menu.PumpkinCarvingMenu;
 import com.unlikepaladin.pfest.network.NetworkPlatform;
-import net.minecraft.client.gui.components.Button;
+import com.unlikepaladin.pfest.registry.client.ModKeyMappings;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Camera;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.lwjgl.glfw.GLFW;
 
 public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarvingMenu> {
-    private static final ResourceLocation PUMPKIN_TEXTURE = new ResourceLocation("minecraft", "textures/block/pumpkin_side.png");
-    private static final String[] FACE_NAMES = new String[]{"Front Face", "Right Face", "Back Face", "Left Face"};
+    private static final ResourceLocation TOOLS_TEXTURE = new ResourceLocation(
+            "paladinsfestivities",
+            "textures/gui/tools_carving_table.png"
+    );
 
-    private int currentFace = 0;
+    private static final String[] FACE_KEYS = new String[]{
+            "gui.paladinsfestivities.pumpkin_carving.face.front",
+            "gui.paladinsfestivities.pumpkin_carving.face.right",
+            "gui.paladinsfestivities.pumpkin_carving.face.back",
+            "gui.paladinsfestivities.pumpkin_carving.face.left"
+    };
+
+    private static final Component TITLE_TEXT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.title")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+    private static final Component ARROW_LEFT = new TextComponent("<").withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD);
+    private static final Component ARROW_RIGHT = new TextComponent(">").withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD);
+
+    private static final Component TOOL_KNIFE = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.knife")
+            .withStyle(ChatFormatting.WHITE);
+    private static final Component TOOL_SCOOP = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.scoop")
+            .withStyle(ChatFormatting.WHITE);
+    private static final Component TOOL_LIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.lit")
+            .withStyle(ChatFormatting.WHITE);
+    private static final Component TOOL_UNLIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.unlit")
+            .withStyle(ChatFormatting.WHITE);
+
+    private static final Component FINISH_LABEL = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.finish")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+    private static final Component FINISH_DESC = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.finish.desc")
+            .withStyle(ChatFormatting.GRAY);
+
+    private static final Component CONTROLS_TITLE = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.controls.title")
+            .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD);
+    private static final Component CONTROLS_CARVE = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.controls.carve")
+            .withStyle(ChatFormatting.DARK_GRAY);
+    private static final Component CONTROLS_SPIN = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.controls.spin")
+            .withStyle(ChatFormatting.DARK_GRAY);
+    private static final Component CONTROLS_EXIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.controls.exit")
+            .withStyle(ChatFormatting.DARK_GRAY);
+
+    private static Component getKeyHint(KeyMapping mapping, ChatFormatting color) {
+        return new TextComponent("[").append(mapping.getTranslatedKeyMessage()).append("]").withStyle(color);
+    }
+
     private int brushSize = 1;
     private boolean eraseMode = false;
     private boolean previewLit = false;
-    private boolean isDragging = false;
-    private boolean faceDirty = false;
+    private boolean isCarving = false;
+    private boolean isRightDragging = false;
+    private final boolean[] dirtyFaces = new boolean[4];
+    private boolean showControlsCard = true;
     private long lastPacketTime = 0;
+    private long lastCarveSoundTime = 0;
+    private boolean cursorHidden = false;
 
-    private Button toolButton;
-    private Button brushButton;
-    private Button litButton;
+    // Smooth camera positioning without modifying player position or fov
+    private Vec3 startCamPos = Vec3.ZERO;
+    private float startYaw = 0.0F;
+    private float startPitch = 0.0F;
+    private long openTime = 0L;
+
+    // Raycast hit result
+    private boolean hasRayHit = false;
+    private int rayHitFace = 0;
+    private int rayHitPixelX = 0;
+    private int rayHitPixelY = 0;
+    private Vec3 rayHitWorldPos = null;
 
     public PumpkinCarvingScreen(PumpkinCarvingMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
-        this.imageWidth = 250;
-        this.imageHeight = 210;
+        this.imageWidth = 0;
+        this.imageHeight = 0;
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 
     @Override
@@ -41,205 +118,675 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         super.init();
         NetworkPlatform.sendOccupiedToServer(this.menu.getPos(), true);
 
-        int canvasX = this.leftPos + 58;
-        int canvasY = this.topPos + 38;
+        Player player = this.minecraft.player;
+        if (player != null) {
+            this.startCamPos = player.getEyePosition();
+            this.startYaw = player.getViewYRot(1.0F);
+            this.startPitch = player.getViewXRot(1.0F);
+        }
+        this.openTime = System.currentTimeMillis();
 
-        // Face navigation arrows
-        this.addRenderableWidget(new Button(canvasX + 6, this.topPos + 18, 16, 16, new TextComponent("<"), b -> {
-            flushCarvePacket();
-            this.currentFace = (this.currentFace + 3) % 4;
-        }));
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.setPreviewLit(this.previewLit);
+        }
+    }
 
-        this.addRenderableWidget(new Button(canvasX + 128 - 22, this.topPos + 18, 16, 16, new TextComponent(">"), b -> {
-            flushCarvePacket();
-            this.currentFace = (this.currentFace + 1) % 4;
-        }));
+    public Vec3 getCustomCameraPos(float partialTicks) {
+        BlockPos pos = this.menu.getPos();
+        if (this.minecraft == null || this.minecraft.level == null || pos == null) {
+            return null;
+        }
 
-        // Left sidebar tools
-        int buttonX = this.leftPos + 6;
-        this.toolButton = this.addRenderableWidget(new Button(buttonX, canvasY, 46, 20, new TextComponent("Carve"), b -> {
-            this.eraseMode = !this.eraseMode;
-            this.toolButton.setMessage(new TextComponent(this.eraseMode ? "Erase" : "Carve"));
-        }));
+        BlockState state = this.minecraft.level.getBlockState(pos);
+        if (!state.is(com.unlikepaladin.pfest.registry.ModBlocks.PUMPKIN_CARVING_STATION.get())) {
+            return null;
+        }
 
-        this.brushButton = this.addRenderableWidget(new Button(buttonX, canvasY + 24, 46, 20, new TextComponent("1x1"), b -> {
-            this.brushSize = (this.brushSize % 3) + 1;
-            this.brushButton.setMessage(new TextComponent(this.brushSize + "x" + this.brushSize));
-        }));
+        Direction facing = state.getValue(PumpkinCarvingStationBlock.FACING);
+        // Ideal camera position: 1.35 blocks in front of the table, slightly elevated at eye level
+        Vec3 targetCamPos = new Vec3(
+                pos.getX() + 0.5D + facing.getStepX() * 1.35D,
+                pos.getY() + 1.45D,
+                pos.getZ() + 0.5D + facing.getStepZ() * 1.35D
+        );
 
-        this.litButton = this.addRenderableWidget(new Button(buttonX, canvasY + 48, 46, 20, new TextComponent("Unlit"), b -> {
-            this.previewLit = !this.previewLit;
-            this.litButton.setMessage(new TextComponent(this.previewLit ? "Lit" : "Unlit"));
-        }));
+        float progress = Mth.clamp((System.currentTimeMillis() - this.openTime) / 300.0F, 0.0F, 1.0F);
+        float t = progress * progress * (3.0F - 2.0F * progress); // smoothstep
+        return this.startCamPos.lerp(targetCamPos, t);
+    }
 
-        this.addRenderableWidget(new Button(buttonX, canvasY + 72, 46, 20, new TextComponent("Clear"), b -> {
-            this.menu.getData().clearFace(this.currentFace);
-            this.faceDirty = true;
-            flushCarvePacket();
-        }));
+    public float getCustomCameraYaw(float partialTicks) {
+        BlockPos pos = this.menu.getPos();
+        if (this.minecraft == null || this.minecraft.level == null || pos == null) {
+            return this.startYaw;
+        }
 
-        // Done button
-        this.addRenderableWidget(new Button(this.leftPos + 192, this.topPos + 182, 50, 20, new TextComponent("Done"), b -> {
-            flushCarvePacket();
-            NetworkPlatform.sendFinishCarveToServer(this.menu.getPos());
-            this.onClose();
-        }));
+        BlockState state = this.minecraft.level.getBlockState(pos);
+        if (!state.is(com.unlikepaladin.pfest.registry.ModBlocks.PUMPKIN_CARVING_STATION.get())) {
+            return this.startYaw;
+        }
+
+        Direction facing = state.getValue(PumpkinCarvingStationBlock.FACING);
+        float targetYaw = facing.getOpposite().toYRot();
+
+        float progress = Mth.clamp((System.currentTimeMillis() - this.openTime) / 300.0F, 0.0F, 1.0F);
+        float t = progress * progress * (3.0F - 2.0F * progress);
+        return Mth.rotLerp(t, this.startYaw, targetYaw);
+    }
+
+    public float getCustomCameraPitch(float partialTicks) {
+        // Looking down slightly at the pumpkin from 1.45m height to 1.25m center over 1.35m distance (~8.5 degrees)
+        float targetPitch = 8.5F;
+
+        float progress = Mth.clamp((System.currentTimeMillis() - this.openTime) / 300.0F, 0.0F, 1.0F);
+        float t = progress * progress * (3.0F - 2.0F * progress);
+        return Mth.lerp(t, this.startPitch, targetPitch);
+    }
+
+    private PumpkinCarvingStationBlockEntity getStationEntity() {
+        if (this.menu.getStation() != null) {
+            return this.menu.getStation();
+        }
+        if (this.minecraft != null && this.minecraft.level != null && this.menu.getPos() != null) {
+            if (this.minecraft.level.getBlockEntity(this.menu.getPos()) instanceof PumpkinCarvingStationBlockEntity s) {
+                return s;
+            }
+        }
+        return null;
     }
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(poseStack);
+        // 1. Update OS cursor visibility based on whether mouse is over UI or in world
+        updateCursorVisibility(mouseX, mouseY);
+
+        // 2. Perform 3D raycast from mouse through the overridden camera to in-world pumpkin face
+        performRaycast(mouseX, mouseY);
+
+        // 3. Render screen UI elements
         super.render(poseStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(poseStack, mouseX, mouseY);
+
+        // 4. Render minimal in-world HUD overlays
+        renderHud(poseStack, mouseX, mouseY);
+
+        // 5. Render active tool icon at mouse cursor (when over world)
+        renderMouseTool(poseStack, mouseX, mouseY);
     }
 
     @Override
     protected void renderBg(PoseStack poseStack, float partialTicks, int mouseX, int mouseY) {
-        int canvasX = this.leftPos + 58;
-        int canvasY = this.topPos + 38;
-        int canvasSize = 128;
-
-        // Background studio container
-        fill(poseStack, this.leftPos, this.topPos, this.leftPos + this.imageWidth, this.topPos + this.imageHeight, 0xFF231C16);
-        drawBorder(poseStack, this.leftPos, this.topPos, this.imageWidth, this.imageHeight, 0xFF4A3B2C);
-
-        // Canvas frame
-        fill(poseStack, canvasX - 2, canvasY - 2, canvasX + canvasSize + 2, canvasY + canvasSize + 2, 0xFF14100C);
-
-        // Render actual vanilla/resource pack pumpkin side texture
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PUMPKIN_TEXTURE);
-        blit(poseStack, canvasX, canvasY, 0.0F, 0.0F, canvasSize, canvasSize, canvasSize, canvasSize);
-
-        CarvedPumpkinData data = this.menu.getData();
-        int res = data.getResolution();
-        int cellSize = canvasSize / res;
-
-        // Render carved pixels on top of the pumpkin texture
-        int unlitBase = 0xFF441300;
-        int unlitShadow = 0xFF2D0003;
-
-        for (int y = 0; y < res; y++) {
-            for (int x = 0; x < res; x++) {
-                if (data.isCarved(this.currentFace, x, y)) {
-                    int pixelColor;
-                    if (this.previewLit) {
-                        pixelColor = CarvedPumpkinTextureManager.getLitPixelArgb(x, y, res);
-                    } else {
-                        boolean topUncarved = (y == 0 || !data.isCarved(this.currentFace, x, y - 1));
-                        boolean leftUncarved = (x == 0 || !data.isCarved(this.currentFace, x - 1, y));
-                        pixelColor = (topUncarved || leftUncarved) ? unlitShadow : unlitBase;
-                    }
-                    fill(poseStack, canvasX + x * cellSize, canvasY + y * cellSize, canvasX + (x + 1) * cellSize, canvasY + (y + 1) * cellSize, pixelColor);
-                }
-            }
-        }
-
-        // Grid lines for precision carving
-        for (int i = 1; i < res; i++) {
-            fill(poseStack, canvasX, canvasY + i * cellSize, canvasX + canvasSize, canvasY + i * cellSize + 1, 0x2A000000);
-            fill(poseStack, canvasX + i * cellSize, canvasY, canvasX + i * cellSize + 1, canvasY + canvasSize, 0x2A000000);
-        }
-
-        // Hover cursor on canvas
-        if (mouseX >= canvasX && mouseX < canvasX + canvasSize && mouseY >= canvasY && mouseY < canvasY + canvasSize) {
-            int hx = (mouseX - canvasX) / cellSize;
-            int hy = (mouseY - canvasY) / cellSize;
-            drawBrushHover(poseStack, canvasX, canvasY, cellSize, hx, hy, res);
-        }
-    }
-
-    private void drawBrushHover(PoseStack poseStack, int canvasX, int canvasY, int cellSize, int hx, int hy, int res) {
-        int color = 0x55FFFFFF;
-        if (this.brushSize <= 1) {
-            fill(poseStack, canvasX + hx * cellSize, canvasY + hy * cellSize, canvasX + (hx + 1) * cellSize, canvasY + (hy + 1) * cellSize, color);
-        } else if (this.brushSize == 2) {
-            for (int dx = 0; dx <= 1; dx++) {
-                for (int dy = 0; dy <= 1; dy++) {
-                    int px = hx + dx, py = hy + dy;
-                    if (px < res && py < res) {
-                        fill(poseStack, canvasX + px * cellSize, canvasY + py * cellSize, canvasX + (px + 1) * cellSize, canvasY + (py + 1) * cellSize, color);
-                    }
-                }
-            }
-        } else {
-            int radius = this.brushSize / 2;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dy = -radius; dy <= radius; dy++) {
-                    int px = hx + dx, py = hy + dy;
-                    if (px >= 0 && px < res && py >= 0 && py < res) {
-                        fill(poseStack, canvasX + px * cellSize, canvasY + py * cellSize, canvasX + (px + 1) * cellSize, canvasY + (py + 1) * cellSize, color);
-                    }
-                }
-            }
-        }
+        // Subtle top and bottom cinema vignette gradients so the 3D world stays completely visible
+        fillGradient(poseStack, 0, 0, this.width, 50, 0x88000000, 0x00000000);
+        fillGradient(poseStack, 0, this.height - 65, this.width, this.height, 0x00000000, 0xAA000000);
     }
 
     @Override
     protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
-        drawCenteredString(poseStack, this.font, new TextComponent("Pumpkin Carving Studio"), this.imageWidth / 2, 6, 0xFFE0B0);
-        drawCenteredString(poseStack, this.font, new TextComponent(FACE_NAMES[this.currentFace]), this.imageWidth / 2, 22, 0xFFFFFF);
+        // Handled in renderHud
+    }
+
+    private void performRaycast(double mouseX, double mouseY) {
+        this.hasRayHit = false;
+        this.rayHitWorldPos = null;
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station == null) return;
+
+        if (isMouseOverUi(mouseX, mouseY)) {
+            station.clearHoverInfo();
+            return;
+        }
+
+        BlockPos pos = this.menu.getPos();
+        if (this.minecraft == null || pos == null || this.minecraft.level == null) {
+            station.clearHoverInfo();
+            return;
+        }
+
+        BlockState state = this.minecraft.level.getBlockState(pos);
+        if (!state.is(com.unlikepaladin.pfest.registry.ModBlocks.PUMPKIN_CARVING_STATION.get())) {
+            station.clearHoverInfo();
+            return;
+        }
+
+        Direction facing = state.getValue(PumpkinCarvingStationBlock.FACING);
+        float partialTicks = this.minecraft != null ? this.minecraft.getFrameTime() : 1.0F;
+        float turntableAngle = station.getRenderTurntableAngle(partialTicks);
+
+        Camera camera = this.minecraft.gameRenderer.getMainCamera();
+        double fov = this.minecraft.options.fov;
+        double aspect = (double) this.minecraft.getWindow().getWidth() / (double) this.minecraft.getWindow().getHeight();
+        double tanHalfFov = Math.tan(Math.toRadians(fov) / 2.0D);
+
+        double ndcX = (mouseX / (double) this.width) * 2.0D - 1.0D;
+        double ndcY = 1.0D - (mouseY / (double) this.height) * 2.0D;
+
+        Vec3 forward = new Vec3(camera.getLookVector());
+        Vec3 up = new Vec3(camera.getUpVector());
+        Vec3 left = new Vec3(camera.getLeftVector());
+
+        Vec3 rayOrigin = camera.getPosition();
+        Vec3 rayDir = forward.subtract(left.scale(ndcX * aspect * tanHalfFov)).add(up.scale(ndcY * tanHalfFov)).normalize();
+
+        // Pumpkin geometry directly on top of table surface
+        Vec3 pumpkinCenter = new Vec3(pos.getX() + 0.5D, pos.getY() + 1.004D + 0.35D, pos.getZ() + 0.5D);
+        double halfSize = 0.35D;
+
+        // Local face directions matching PumpkinCarverBlockEntityRenderer
+        Direction[] faceDirs = new Direction[]{
+                Direction.SOUTH,
+                Direction.WEST,
+                Direction.NORTH,
+                Direction.EAST
+        };
+
+        double bestT = Double.MAX_VALUE;
+        int bestFace = -1;
+        double bestU = 0, bestV = 0;
+
+        for (int i = 0; i < 4; i++) {
+            Vec3 localNormal = new Vec3(faceDirs[i].getStepX(), faceDirs[i].getStepY(), faceDirs[i].getStepZ());
+            // Turntable rotates positively around Y matching poseStack.mulPose(Vector3f.YP.rotationDegrees(turntableAngle))
+            Vec3 worldNormal = localNormal.yRot((float) Math.toRadians(-facing.toYRot() + turntableAngle));
+
+            double denom = rayDir.dot(worldNormal);
+            // Only test faces directed towards the camera
+            if (denom >= -0.01D) continue;
+
+            Vec3 faceCenter = pumpkinCenter.add(worldNormal.scale(halfSize));
+            double t = faceCenter.subtract(rayOrigin).dot(worldNormal) / denom;
+            if (t <= 0.0D || t >= bestT) continue;
+
+            Vec3 hit = rayOrigin.add(rayDir.scale(t));
+            Vec3 diff = hit.subtract(faceCenter);
+            Vec3 rightVector = up.cross(worldNormal);
+
+            double lx = diff.dot(rightVector);
+            double ly = diff.y;
+
+            if (Math.abs(lx) <= halfSize && Math.abs(ly) <= halfSize) {
+                bestT = t;
+                bestFace = i;
+                bestU = (lx + halfSize) / (2.0D * halfSize);
+                bestV = 1.0D - (ly + halfSize) / (2.0D * halfSize);
+            }
+        }
+
+        if (bestFace >= 0) {
+            this.hasRayHit = true;
+            this.rayHitFace = bestFace;
+            this.rayHitWorldPos = rayOrigin.add(rayDir.scale(bestT));
+            int res = this.menu.getData().getResolution();
+            this.rayHitPixelX = Mth.clamp((int) (bestU * res), 0, res - 1);
+            this.rayHitPixelY = Mth.clamp((int) (bestV * res), 0, res - 1);
+            station.setHoverInfo(this.rayHitFace, this.rayHitPixelX, this.rayHitPixelY, this.brushSize, this.eraseMode);
+        } else {
+            this.rayHitWorldPos = null;
+            station.clearHoverInfo();
+        }
+    }
+
+    private void updateCursorVisibility(double mouseX, double mouseY) {
+        if (this.minecraft == null) return;
+        long window = this.minecraft.getWindow().getWindow();
+        boolean inWindow = mouseX >= 0 && mouseY >= 0 && mouseX <= this.width && mouseY <= this.height;
+        boolean shouldHide = inWindow && !isMouseOverUi(mouseX, mouseY);
+
+        if (shouldHide != this.cursorHidden) {
+            this.cursorHidden = shouldHide;
+            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, shouldHide ? GLFW.GLFW_CURSOR_HIDDEN : GLFW.GLFW_CURSOR_NORMAL);
+        }
+    }
+
+    private void restoreCursor() {
+        if (this.cursorHidden && this.minecraft != null) {
+            this.cursorHidden = false;
+            long window = this.minecraft.getWindow().getWindow();
+            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+        }
+    }
+
+    private boolean isMouseOverUi(double mouseX, double mouseY) {
+        // Bottom toolbar shelf
+        if (mouseY >= this.height - 48) return true;
+        // Finish button
+        if (mouseX >= this.width - 124 && mouseY >= this.height - 46) return true;
+        // Turntable turn arrows
+        int arrowY = this.height / 2 - 16;
+        if (mouseY >= arrowY && mouseY < arrowY + 32) {
+            if (mouseX >= 16 && mouseX < 52) return true;
+            if (mouseX >= this.width - 52 && mouseX < this.width - 16) return true;
+        }
+        // Controls guide card
+        if (this.showControlsCard && mouseX >= this.width - 142 && mouseY <= 96) return true;
+        return false;
+    }
+
+    private void renderHud(PoseStack poseStack, int mouseX, int mouseY) {
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        int activeFace = station != null ? station.getActiveFaceIndex() : 0;
+
+        // 1. Top Title & Face Indicator
+        drawCenteredString(poseStack, this.font, TITLE_TEXT, this.width / 2, 10, 0xFFFFFFFF);
+        Component faceName = new TranslatableComponent(FACE_KEYS[activeFace]).withStyle(ChatFormatting.YELLOW);
+        Component faceIndicator = new TranslatableComponent(
+                "gui.paladinsfestivities.pumpkin_carving.face_indicator",
+                faceName,
+                activeFace + 1
+        ).withStyle(ChatFormatting.GRAY);
+        drawCenteredString(poseStack, this.font, faceIndicator, this.width / 2, 24, 0xFFFFFFFF);
+
+        // 2. Turntable Side Arrows
+        int arrowY = this.height / 2 - 16;
+        renderArrowButton(poseStack, 16, arrowY, 36, 32, ARROW_LEFT, getKeyHint(ModKeyMappings.ROTATE_TURN_TABLE_LEFT, ChatFormatting.GRAY), mouseX, mouseY);
+        renderArrowButton(poseStack, this.width - 52, arrowY, 36, 32, ARROW_RIGHT, getKeyHint(ModKeyMappings.ROTATE_TURN_TABLE_RIGHT, ChatFormatting.GRAY), mouseX, mouseY);
+
+        // 3. Bottom Shelf Tool Rack
+        renderToolbar(poseStack, mouseX, mouseY);
+
+        // 4. "Finish Carving" Button
+        renderDoneButton(poseStack, mouseX, mouseY);
+
+        // 5. Controls Card
+        if (this.showControlsCard) {
+            renderControlsCard(poseStack);
+        }
+    }
+
+    private void renderArrowButton(PoseStack poseStack, int x, int y, int w, int h, Component arrow, Component keyHint, int mouseX, int mouseY) {
+        boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        int bgColor = hover ? 0xDD4A3525 : 0xAA2A1E14;
+        int borderColor = hover ? 0xFFFFD700 : 0xFF5A442E;
+
+        fill(poseStack, x, y, x + w, y + h, bgColor);
+        drawBorder(poseStack, x, y, w, h, borderColor);
+
+        drawCenteredString(poseStack, this.font, arrow, x + w / 2, y + 6, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, keyHint, x + w / 2, y + 19, 0xAAAAAA);
+    }
+
+    private int getToolbarStartX(int totalW) {
+        int doneW = 104;
+        int doneX = this.width - doneW - 16;
+        int startX = Math.min((this.width - totalW) / 2, doneX - totalW - 16);
+        return Math.max(8, startX);
+    }
+
+    private void renderToolbar(PoseStack poseStack, int mouseX, int mouseY) {
+        int slotW = 44;
+        int slotH = 34;
+        int gap = 6;
+        int totalW = 4 * slotW + 3 * gap;
+        int startX = getToolbarStartX(totalW);
+        int startY = this.height - 44;
+
+        // Shelf backing
+        fill(poseStack, startX - 8, startY - 4, startX + totalW + 8, startY + slotH + 4, 0xDD1C140E);
+        drawBorder(poseStack, startX - 8, startY - 4, totalW + 16, slotH + 8, 0xFF4A3525);
+
+        // Slot 1: Knife (Carve)
+        renderToolSlot(poseStack, startX, startY, slotW, slotH, TOOL_KNIFE, getKeyHint(ModKeyMappings.CARVE_TOOL_KNIFE, ChatFormatting.GOLD), !this.eraseMode, mouseX, mouseY);
+        // Slot 2: Spoon (Scoop/Erase)
+        renderToolSlot(poseStack, startX + slotW + gap, startY, slotW, slotH, TOOL_SCOOP, getKeyHint(ModKeyMappings.CARVE_TOOL_SCOOP, ChatFormatting.GOLD), this.eraseMode, mouseX, mouseY);
+        // Slot 3: Brush/Chisel Size
+        Component brushLabel = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.brush", this.brushSize)
+                .withStyle(ChatFormatting.WHITE);
+        renderToolSlot(poseStack, startX + (slotW + gap) * 2, startY, slotW, slotH, brushLabel, getKeyHint(ModKeyMappings.CARVE_BRUSH_SIZE, ChatFormatting.GOLD), false, mouseX, mouseY);
+        // Slot 4: Candle (Lit Preview)
+        Component litLabel = this.previewLit ? TOOL_LIT : TOOL_UNLIT;
+        renderToolSlot(poseStack, startX + (slotW + gap) * 3, startY, slotW, slotH, litLabel, getKeyHint(ModKeyMappings.CARVE_TOGGLE_LIT, ChatFormatting.GOLD), this.previewLit, mouseX, mouseY);
+    }
+
+    private void renderToolSlot(PoseStack poseStack, int x, int y, int w, int h, Component label, Component key, boolean active, int mouseX, int mouseY) {
+        boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        int bgColor = active ? 0xDD5C3E1F : (hover ? 0xBB3B2817 : 0xAA241910);
+        int borderColor = active ? 0xFFFFD700 : (hover ? 0xFFC0A060 : 0xFF503822);
+
+        fill(poseStack, x, y, x + w, y + h, bgColor);
+        drawBorder(poseStack, x, y, w, h, borderColor);
+
+        drawCenteredString(poseStack, this.font, label, x + w / 2, y + 5, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, key, x + w / 2, y + 19, 0xFFE080);
+    }
+
+    private void renderDoneButton(PoseStack poseStack, int mouseX, int mouseY) {
+        int w = 104;
+        int h = 32;
+        int x = this.width - w - 16;
+        int y = this.height - h - 10;
+
+        boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        int bgColor = hover ? 0xEE7A380A : 0xDD562604;
+        int borderColor = hover ? 0xFFFFE060 : 0xFFD87818;
+
+        fill(poseStack, x, y, x + w, y + h, bgColor);
+        drawBorder(poseStack, x, y, w, h, borderColor);
+
+        drawCenteredString(poseStack, this.font, FINISH_LABEL, x + w / 2, y + 7, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, FINISH_DESC, x + w / 2, y + 18, 0xCCCCCC);
+    }
+
+    private void renderControlsCard(PoseStack poseStack) {
+        int w = 126;
+        int h = 80;
+        int x = this.width - w - 12;
+        int y = 12;
+
+        fill(poseStack, x, y, x + w, y + h, 0xDDF3E5CE); // warm parchment
+        drawBorder(poseStack, x, y, w, h, 0xFF6D5238);
+
+        Component turnControls = new TranslatableComponent(
+                "gui.paladinsfestivities.pumpkin_carving.controls.turn",
+                ModKeyMappings.ROTATE_TURN_TABLE_LEFT.getTranslatedKeyMessage(),
+                ModKeyMappings.ROTATE_TURN_TABLE_RIGHT.getTranslatedKeyMessage()
+        ).withStyle(ChatFormatting.DARK_GRAY);
+
+        Component toolControls = new TranslatableComponent(
+                "gui.paladinsfestivities.pumpkin_carving.controls.tools",
+                ModKeyMappings.CARVE_TOOL_KNIFE.getTranslatedKeyMessage(),
+                ModKeyMappings.CARVE_TOGGLE_LIT.getTranslatedKeyMessage()
+        ).withStyle(ChatFormatting.DARK_GRAY);
+
+        this.font.draw(poseStack, CONTROLS_TITLE, x + 8, y + 6, 0x222222);
+        this.font.draw(poseStack, CONTROLS_CARVE, x + 8, y + 20, 0x333333);
+        this.font.draw(poseStack, CONTROLS_SPIN, x + 8, y + 32, 0x333333);
+        this.font.draw(poseStack, turnControls, x + 8, y + 44, 0x333333);
+        this.font.draw(poseStack, toolControls, x + 8, y + 56, 0x333333);
+        this.font.draw(poseStack, CONTROLS_EXIT, x + 8, y + 68, 0x333333);
+    }
+
+    private void renderMouseTool(PoseStack poseStack, int mouseX, int mouseY) {
+        if (isMouseOverUi(mouseX, mouseY)) {
+            return;
+        }
+        if (mouseX < 0 || mouseY < 0 || mouseX > this.width || mouseY > this.height) {
+            return;
+        }
+
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, TOOLS_TEXTURE);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        float u = this.eraseMode ? 16.0F : 0.0F;
+        float v = 0.0F;
+
+        // Render at larger, clear 32x32 size (2x integer scale)
+        int toolSize = 32;
+
+        // Position icon so the cutting tip is anchored near the cursor and naturally centered vertically
+        // Knife tip in 16x16 is (10, 3) -> in 32x32 it is (20, 6)
+        // Scoop tip in 16x16 is (9, 5) -> in 32x32 it is (18, 10)
+        // By centering vertically (offsetting Y by 12-14px), the tool doesn't hang low below the cursor
+        int tipOffsetX = this.eraseMode ? 18 : 20;
+        int tipOffsetY = this.eraseMode ? 8 : 5;
+
+        int iconX = mouseX - tipOffsetX;
+        int iconY = mouseY - tipOffsetY;
+
+        poseStack.pushPose();
+        poseStack.translate(0, 0, 300);
+        blit(poseStack, iconX, iconY, toolSize, toolSize, u, v, 16, 16, 32, 16);
+        poseStack.popPose();
+
+        RenderSystem.disableBlend();
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && isInsideCanvas(mouseX, mouseY)) {
-            this.isDragging = true;
-            handleCanvasClick(mouseX, mouseY);
+        // 1. Check side arrow buttons
+        int arrowY = this.height / 2 - 16;
+        if (mouseX >= 16 && mouseX < 52 && mouseY >= arrowY && mouseY < arrowY + 32) {
+            rotateTurntableLeft();
             return true;
         }
+        if (mouseX >= this.width - 52 && mouseX < this.width - 16 && mouseY >= arrowY && mouseY < arrowY + 32) {
+            rotateTurntableRight();
+            return true;
+        }
+
+        // 2. Check toolbar slots
+        int slotW = 44;
+        int slotH = 34;
+        int gap = 6;
+        int totalW = 4 * slotW + 3 * gap;
+        int startX = getToolbarStartX(totalW);
+        int startY = this.height - 44;
+
+        if (mouseY >= startY && mouseY < startY + slotH) {
+            if (mouseX >= startX && mouseX < startX + slotW) {
+                this.eraseMode = false;
+                playUiClick();
+                return true;
+            } else if (mouseX >= startX + slotW + gap && mouseX < startX + (slotW + gap) + slotW) {
+                this.eraseMode = true;
+                playUiClick();
+                return true;
+            } else if (mouseX >= startX + (slotW + gap) * 2 && mouseX < startX + (slotW + gap) * 2 + slotW) {
+                this.brushSize = (this.brushSize % 3) + 1;
+                playUiClick();
+                return true;
+            } else if (mouseX >= startX + (slotW + gap) * 3 && mouseX < startX + (slotW + gap) * 3 + slotW) {
+                toggleLitPreview();
+                return true;
+            }
+        }
+
+        // 3. Check Finish button
+        int doneW = 104;
+        int doneH = 32;
+        int doneX = this.width - doneW - 16;
+        int doneY = this.height - doneH - 10;
+        if (mouseX >= doneX && mouseX < doneX + doneW && mouseY >= doneY && mouseY < doneY + doneH) {
+            finishCarving();
+            return true;
+        }
+
+        // 4. In-world carving interaction
+        if (button == 0 && this.hasRayHit) {
+            this.isCarving = true;
+            applyCarveAtCursor();
+            return true;
+        }
+
+        // 5. Right-click or middle-click drag to turn turntable
+        if (button == 1 || button == 2) {
+            this.isRightDragging = true;
+            return true;
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (button == 0 && this.isDragging && isInsideCanvas(mouseX, mouseY)) {
-            handleCanvasClick(mouseX, mouseY);
-            if (System.currentTimeMillis() - this.lastPacketTime > 120) {
-                flushCarvePacket();
+        if (button == 0 && this.isCarving) {
+            performRaycast(mouseX, mouseY);
+            if (this.hasRayHit) {
+                applyCarveAtCursor();
+                if (System.currentTimeMillis() - this.lastPacketTime > 100) {
+                    flushCarvePackets();
+                }
             }
             return true;
         }
+
+        if ((button == 1 || button == 2) && this.isRightDragging) {
+            PumpkinCarvingStationBlockEntity station = getStationEntity();
+            if (station != null) {
+                station.rotateTurntable((float) dragX * 0.9F);
+            }
+            return true;
+        }
+
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && this.isDragging) {
-            this.isDragging = false;
-            flushCarvePacket();
+        if (button == 0 && this.isCarving) {
+            this.isCarving = false;
+            flushCarvePackets();
+            return true;
+        }
+        if ((button == 1 || button == 2) && this.isRightDragging) {
+            this.isRightDragging = false;
+            PumpkinCarvingStationBlockEntity station = getStationEntity();
+            if (station != null) {
+                NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
+            }
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    private boolean isInsideCanvas(double mouseX, double mouseY) {
-        int canvasX = this.leftPos + 58;
-        int canvasY = this.topPos + 38;
-        return mouseX >= canvasX && mouseX < canvasX + 128 && mouseY >= canvasY && mouseY < canvasY + 128;
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ModKeyMappings.ROTATE_TURN_TABLE_LEFT.matches(keyCode, scanCode) || keyCode == GLFW.GLFW_KEY_LEFT) {
+            rotateTurntableLeft();
+            return true;
+        } else if (ModKeyMappings.ROTATE_TURN_TABLE_RIGHT.matches(keyCode, scanCode) || keyCode == GLFW.GLFW_KEY_RIGHT) {
+            rotateTurntableRight();
+            return true;
+        } else if (ModKeyMappings.CARVE_TOOL_KNIFE.matches(keyCode, scanCode)) {
+            this.eraseMode = false;
+            playUiClick();
+            return true;
+        } else if (ModKeyMappings.CARVE_TOOL_SCOOP.matches(keyCode, scanCode)) {
+            this.eraseMode = true;
+            playUiClick();
+            return true;
+        } else if (ModKeyMappings.CARVE_BRUSH_SIZE.matches(keyCode, scanCode)) {
+            this.brushSize = (this.brushSize % 3) + 1;
+            playUiClick();
+            return true;
+        } else if (ModKeyMappings.CARVE_TOGGLE_LIT.matches(keyCode, scanCode)) {
+            toggleLitPreview();
+            return true;
+        } else if (ModKeyMappings.CARVE_TOGGLE_CONTROLS.matches(keyCode, scanCode)) {
+            this.showControlsCard = !this.showControlsCard;
+            playUiClick();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void handleCanvasClick(double mouseX, double mouseY) {
-        int canvasX = this.leftPos + 58;
-        int canvasY = this.topPos + 38;
+    private void rotateTurntableLeft() {
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.rotateTurntableSnapped(false);
+            NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
+            playWoodClick(0.9F);
+        }
+    }
+
+    private void rotateTurntableRight() {
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.rotateTurntableSnapped(true);
+            NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
+            playWoodClick(1.1F);
+        }
+    }
+
+    private void toggleLitPreview() {
+        this.previewLit = !this.previewLit;
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.setPreviewLit(this.previewLit);
+        }
+        playUiClick();
+    }
+
+    private void applyCarveAtCursor() {
+        if (!this.hasRayHit) return;
         CarvedPumpkinData data = this.menu.getData();
-        int res = data.getResolution();
-        int cellSize = 128 / res;
+        data.carveBrush(this.rayHitFace, this.rayHitPixelX, this.rayHitPixelY, this.brushSize, !this.eraseMode);
+        this.dirtyFaces[this.rayHitFace] = true;
 
-        int cx = (int) (mouseX - canvasX) / cellSize;
-        int cy = (int) (mouseY - canvasY) / cellSize;
+        long now = System.currentTimeMillis();
+        if (now - this.lastCarveSoundTime > 140) {
+            playCarveSound();
+            this.lastCarveSoundTime = now;
+        }
 
-        data.carveBrush(this.currentFace, cx, cy, this.brushSize, !this.eraseMode);
-        this.faceDirty = true;
+        spawnCarveParticles();
     }
 
-    private void flushCarvePacket() {
-        if (!this.faceDirty) return;
-        byte[] faceBytes = this.menu.getData().getFaceBytes(this.currentFace);
-        NetworkPlatform.sendCarveToServer(this.menu.getPos(), this.currentFace, faceBytes);
-        this.faceDirty = false;
+    private void spawnCarveParticles() {
+        if (this.minecraft == null || this.minecraft.particleEngine == null || this.rayHitWorldPos == null) {
+            return;
+        }
+        BlockParticleOption particle = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.PUMPKIN.defaultBlockState());
+        int count = Math.min(3, Math.max(1, this.brushSize));
+        for (int i = 0; i < count; i++) {
+            double vx = (Math.random() - 0.5) * 0.06;
+            double vy = Math.random() * 0.05 + 0.02;
+            double vz = (Math.random() - 0.5) * 0.06;
+            double ox = (Math.random() - 0.5) * 0.02;
+            double oy = (Math.random() - 0.5) * 0.02;
+            double oz = (Math.random() - 0.5) * 0.02;
+            net.minecraft.client.particle.Particle p = this.minecraft.particleEngine.createParticle(
+                    particle,
+                    this.rayHitWorldPos.x + ox,
+                    this.rayHitWorldPos.y + oy,
+                    this.rayHitWorldPos.z + oz,
+                    vx, vy, vz
+            );
+            if (p != null) {
+                float scale = 0.15F + (float) Math.random() * 0.1F;
+                p.scale(scale);
+            }
+        }
+    }
+
+    private void flushCarvePackets() {
+        for (int f = 0; f < 4; f++) {
+            if (this.dirtyFaces[f]) {
+                byte[] faceBytes = this.menu.getData().getFaceBytes(f);
+                NetworkPlatform.sendCarveToServer(this.menu.getPos(), f, faceBytes);
+                this.dirtyFaces[f] = false;
+            }
+        }
         this.lastPacketTime = System.currentTimeMillis();
+    }
+
+    private void finishCarving() {
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
+        }
+        // Send all 4 faces before finishing
+        for (int f = 0; f < 4; f++) {
+            byte[] faceBytes = this.menu.getData().getFaceBytes(f);
+            NetworkPlatform.sendCarveToServer(this.menu.getPos(), f, faceBytes);
+            this.dirtyFaces[f] = false;
+        }
+        NetworkPlatform.sendFinishCarveToServer(this.menu.getPos());
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PUMPKIN_CARVE, 1.0F));
+        }
+        this.onClose();
+    }
+
+    private void playWoodClick(float pitch) {
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.WOODEN_BUTTON_CLICK_ON, pitch));
+        }
+    }
+
+    private void playUiClick() {
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+    }
+
+    private void playCarveSound() {
+        if (this.minecraft != null) {
+            float pitch = 1.2F + (float) (Math.random() * 0.4F);
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.WOOD_HIT, pitch));
+        }
     }
 
     private void drawBorder(PoseStack poseStack, int x, int y, int width, int height, int color) {
@@ -251,8 +798,20 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
 
     @Override
     public void onClose() {
-        flushCarvePacket();
+        restoreCursor();
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.clearHoverInfo();
+            NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
+        }
+        flushCarvePackets();
         NetworkPlatform.sendOccupiedToServer(this.menu.getPos(), false);
         super.onClose();
+    }
+
+    @Override
+    public void removed() {
+        restoreCursor();
+        super.removed();
     }
 }

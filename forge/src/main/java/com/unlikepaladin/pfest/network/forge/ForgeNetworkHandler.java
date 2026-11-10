@@ -26,6 +26,7 @@ public class ForgeNetworkHandler {
         CHANNEL.registerMessage(id++, CarvePacket.class, CarvePacket::encode, CarvePacket::decode, CarvePacket::handle);
         CHANNEL.registerMessage(id++, OccupiedPacket.class, OccupiedPacket::encode, OccupiedPacket::decode, OccupiedPacket::handle);
         CHANNEL.registerMessage(id++, FinishCarvePacket.class, FinishCarvePacket::encode, FinishCarvePacket::decode, FinishCarvePacket::handle);
+        CHANNEL.registerMessage(id++, RotationPacket.class, RotationPacket::encode, RotationPacket::decode, RotationPacket::handle);
     }
 
     public static class CarvePacket {
@@ -109,6 +110,35 @@ public class ForgeNetworkHandler {
                 ServerPlayer player = ctx.get().getSender();
                 if (player != null) {
                     ServerPacketHandler.handleFinishCarve(player, msg.pos);
+                }
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    public static class RotationPacket {
+        private final BlockPos pos;
+        private final float angle;
+
+        public RotationPacket(BlockPos pos, float angle) {
+            this.pos = pos;
+            this.angle = angle;
+        }
+
+        public static void encode(RotationPacket msg, FriendlyByteBuf buf) {
+            buf.writeBlockPos(msg.pos);
+            buf.writeFloat(msg.angle);
+        }
+
+        public static RotationPacket decode(FriendlyByteBuf buf) {
+            return new RotationPacket(buf.readBlockPos(), buf.readFloat());
+        }
+
+        public static void handle(RotationPacket msg, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer player = ctx.get().getSender();
+                if (player != null) {
+                    ServerPacketHandler.handleRotation(player, msg.pos, msg.angle);
                 }
             });
             ctx.get().setPacketHandled(true);

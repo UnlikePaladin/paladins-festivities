@@ -18,4 +18,9 @@ public class NetworkPlatform {
     public static void sendFinishCarveToServer(BlockPos pos) {
         throw new AssertionError();
     }
+
+    @ExpectPlatform
+    public static void sendRotationToServer(BlockPos pos, float angle) {
+        throw new AssertionError();
+    }
 }
