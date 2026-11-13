@@ -32,6 +32,7 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
     private float turntableAngle = 0.0F;
     private float targetTurntableAngle = 0.0F;
     private boolean previewLit = false;
+    private boolean initializedRotation = false;
 
     // Client-side hover selection preview for in-world snapping box
     private int hoverFace = -1;
@@ -161,6 +162,10 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
 
         this.heldPumpkin = ItemStack.EMPTY;
         this.data.clearAll();
+        this.targetTurntableAngle = 0.0F;
+        this.turntableAngle = 0.0F;
+        this.oTurntableAngle = 0.0F;
+        this.initializedRotation = false;
         sync();
     }
 
@@ -204,10 +209,13 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
         if (tag.contains("PumpkinAngle", 99)) {
             float angle = tag.getFloat("PumpkinAngle");
             this.targetTurntableAngle = angle;
-            if (this.level == null) {
+            if (!this.initializedRotation || this.level == null) {
                 this.turntableAngle = angle;
                 this.oTurntableAngle = angle;
+                this.initializedRotation = true;
             }
+        } else if (!this.initializedRotation) {
+            this.initializedRotation = true;
         }
     }
 
@@ -227,6 +235,10 @@ public class PumpkinCarvingStationBlockEntity extends BlockEntity implements Cle
     public void clearContent() {
         this.heldPumpkin = ItemStack.EMPTY;
         this.data.clearAll();
+        this.targetTurntableAngle = 0.0F;
+        this.turntableAngle = 0.0F;
+        this.oTurntableAngle = 0.0F;
+        this.initializedRotation = false;
         sync();
     }
 }
