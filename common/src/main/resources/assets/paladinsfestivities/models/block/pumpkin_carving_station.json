@@ -4,7 +4,8 @@
 	"texture_size": [32, 32],
 	"textures": {
 		"2": "paladinsfestivities:block/carving_table_top",
-		"8": "paladinsfestivities:block/carving_table_bottom"
+		"8": "paladinsfestivities:block/carving_table_bottom",
+		"particle": "paladinsfestivities:block/carving_table_bottom"
 	},
 	"elements": [
 		{
