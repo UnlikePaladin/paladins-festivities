@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north,model=1": { "model": "paladinsfestivities:block/skeleton_pile" },
+    "facing=east,model=1": { "model": "paladinsfestivities:block/skeleton_pile", "y": 90 },
+    "facing=south,model=1": { "model": "paladinsfestivities:block/skeleton_pile", "y": 180 },
+    "facing=west,model=1": { "model": "paladinsfestivities:block/skeleton_pile", "y": 270 },
+    "facing=north,model=2": { "model": "paladinsfestivities:block/skeleton_pile_2" },
+    "facing=east,model=2": { "model": "paladinsfestivities:block/skeleton_pile_2", "y": 90 },
+    "facing=south,model=2": { "model": "paladinsfestivities:block/skeleton_pile_2", "y": 180 },
+    "facing=west,model=2": { "model": "paladinsfestivities:block/skeleton_pile_2", "y": 270 },
+    "facing=north,model=3": { "model": "paladinsfestivities:block/skeleton_pile_3" },
+    "facing=east,model=3": { "model": "paladinsfestivities:block/skeleton_pile_3", "y": 90 },
+    "facing=south,model=3": { "model": "paladinsfestivities:block/skeleton_pile_3", "y": 180 },
+    "facing=west,model=3": { "model": "paladinsfestivities:block/skeleton_pile_3", "y": 270 }
+  }
+}

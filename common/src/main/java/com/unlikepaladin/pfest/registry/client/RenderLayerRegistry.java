@@ -14,6 +14,7 @@ public class RenderLayerRegistry {
         registerBlockToRenderLayer(ModBlocks.COFFIN, RenderType.cutout());
         registerBlockToRenderLayer(ModBlocks.GOLD_CANDELABRA, RenderType.cutout());
         registerBlockToRenderLayer(ModBlocks.IRON_CANDELABRA, RenderType.cutout());
+        registerBlockToRenderLayer(ModBlocks.SKELETON_PILE, RenderType.cutout());
     }
 
     public static void registerBlockToRenderLayer(Supplier<? extends Block> blockSupplier, RenderType renderType) {

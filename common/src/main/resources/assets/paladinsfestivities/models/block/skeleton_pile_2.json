@@ -1,6 +1,7 @@
 {
 	"format_version": "1.9.0",
 	"credit": "By UnlikePaladin",
+	"parent": "block/block",
 	"texture_size": [64, 32],
 	"textures": {
 		"0": "entity/skeleton/skeleton",

@@ -4,6 +4,7 @@ import com.unlikepaladin.pfest.blocks.CandelabraBlock;
 import com.unlikepaladin.pfest.blocks.CoffinBlock;
 import com.unlikepaladin.pfest.blocks.CustomCarvedPumpkinBlock;
 import com.unlikepaladin.pfest.blocks.PumpkinCarvingStationBlock;
+import com.unlikepaladin.pfest.blocks.SkeletonPileBlock;
 import com.unlikepaladin.pfest.items.CustomCarvedPumpkinItem;
 import net.minecraft.world.item.BedItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -53,4 +54,11 @@ public class ModBlocks {
                             .sound(SoundType.LANTERN)
                             .noOcclusion()
                             .lightLevel(state -> state.getValue(CandelabraBlock.LIT) ? 5 * state.getValue(CandelabraBlock.CANDLES) : 0)));
+
+    public static final Supplier<Block> SKELETON_PILE =
+            RegistryHelper.registerBlockAndItem("skeleton_pile",
+                    () -> new SkeletonPileBlock(BlockBehaviour.Properties.of(Material.DECORATION, MaterialColor.SAND)
+                            .strength(1.0F)
+                            .sound(SoundType.BONE_BLOCK)
+                            .noOcclusion()));
 }
