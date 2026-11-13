@@ -1,5 +1,6 @@
 package com.unlikepaladin.pfest.registry;
 
+import com.unlikepaladin.pfest.blocks.blockentities.CandelabraBlockEntity;
 import com.unlikepaladin.pfest.blocks.blockentities.CustomCarvedPumpkinBlockEntity;
 import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -14,4 +15,7 @@ public class ModBlockEntities {
 
     public static Supplier<BlockEntityType<CustomCarvedPumpkinBlockEntity>> CUSTOM_CARVED_PUMPKIN =
             BlockEntityRegistry.registerBlockEntity("custom_carved_pumpkin", CustomCarvedPumpkinBlockEntity::new, ModBlocks.CUSTOM_CARVED_PUMPKIN);
+
+    public static Supplier<BlockEntityType<CandelabraBlockEntity>> CANDELABRA =
+            BlockEntityRegistry.registerBlockEntity("candelabra", CandelabraBlockEntity::new, ModBlocks.GOLD_CANDELABRA, ModBlocks.IRON_CANDELABRA);
 }

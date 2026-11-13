@@ -1,0 +1,36 @@
+{
+  "multipart": [
+    {
+      "when": { "facing": "north", "dusty": "false" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra" }
+    },
+    {
+      "when": { "facing": "east", "dusty": "false" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra", "y": 90 }
+    },
+    {
+      "when": { "facing": "south", "dusty": "false" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra", "y": 180 }
+    },
+    {
+      "when": { "facing": "west", "dusty": "false" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra", "y": 270 }
+    },
+    {
+      "when": { "facing": "north", "dusty": "true" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra_cobweb" }
+    },
+    {
+      "when": { "facing": "east", "dusty": "true" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra_cobweb", "y": 90 }
+    },
+    {
+      "when": { "facing": "south", "dusty": "true" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra_cobweb", "y": 180 }
+    },
+    {
+      "when": { "facing": "west", "dusty": "true" },
+      "apply": { "model": "paladinsfestivities:block/iron_candelabra_cobweb", "y": 270 }
+    }
+  ]
+}

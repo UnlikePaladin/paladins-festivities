@@ -1,0 +1,7 @@
+{
+  "parent": "paladinsfestivities:block/candelabra",
+  "textures": {
+    "1": "paladinsfestivities:block/gold_candelabra",
+    "particle": "paladinsfestivities:block/gold_candelabra"
+  }
+}

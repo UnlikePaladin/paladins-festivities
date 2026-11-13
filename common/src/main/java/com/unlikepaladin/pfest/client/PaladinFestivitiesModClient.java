@@ -1,5 +1,6 @@
 package com.unlikepaladin.pfest.client;
 
+import com.unlikepaladin.pfest.client.render.CandelabraBlockEntityRenderer;
 import com.unlikepaladin.pfest.client.render.CustomCarvedPumpkinBlockEntityRenderer;
 import com.unlikepaladin.pfest.client.render.PumpkinCarverBlockEntityRenderer;
 import com.unlikepaladin.pfest.registry.ModBlockEntities;
@@ -15,6 +16,7 @@ public class PaladinFestivitiesModClient {
         net.minecraft.client.KeyMapping.resetMapping();
         BlockEntityRendererRegistry.register(ModBlockEntities.PUMPKIN_CARVING_STATION, PumpkinCarverBlockEntityRenderer::new);
         BlockEntityRendererRegistry.register(ModBlockEntities.CUSTOM_CARVED_PUMPKIN, CustomCarvedPumpkinBlockEntityRenderer::new);
+        BlockEntityRendererRegistry.register(ModBlockEntities.CANDELABRA, CandelabraBlockEntityRenderer::new);
         RenderLayerRegistry.init();
     }
 }

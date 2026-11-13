@@ -1,0 +1,110 @@
+{
+	"format_version": "26.3",
+	"credit": "By UnlikePaladin",
+	"parent": "block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"1": "paladinsfestivities:block/gold_candelabra",
+		"particle": "paladinsfestivities:block/gold_candelabra"
+	},
+	"elements": [
+		{
+			"from": [9, 6, 7],
+			"to": [11, 8, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 7]},
+			"faces": {
+				"north": {"uv": [7, 5.5, 8, 6.5], "texture": "#1"},
+				"south": {"uv": [4, 7.5, 5, 8.5], "texture": "#1"},
+				"up": {"uv": [6, 7.5, 7, 8.5], "texture": "#1"},
+				"down": {"uv": [7, 7.5, 8, 8.5], "texture": "#1"}
+			}
+		},
+		{
+			"from": [6, 0, 6],
+			"to": [10, 1, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7]},
+			"faces": {
+				"north": {"uv": [4, 6, 6, 6.5], "texture": "#1"},
+				"east": {"uv": [6, 4, 8, 4.5], "texture": "#1"},
+				"south": {"uv": [6, 4.5, 8, 5], "texture": "#1"},
+				"west": {"uv": [6, 5, 8, 5.5], "texture": "#1"},
+				"up": {"uv": [4, 0, 6, 2], "texture": "#1"},
+				"down": {"uv": [4, 2, 6, 4], "texture": "#1"}
+			}
+		},
+		{
+			"name": "holder1",
+			"from": [7, 1, 7],
+			"to": [9, 11, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7]},
+			"faces": {
+				"north": {"uv": [0, 0, 1, 5], "texture": "#1"},
+				"east": {"uv": [1, 0, 2, 5], "texture": "#1"},
+				"south": {"uv": [2, 0, 3, 5], "texture": "#1"},
+				"west": {"uv": [3, 0, 4, 5], "texture": "#1"},
+				"up": {"uv": [6, 5.5, 7, 6.5], "texture": "#1"}
+			}
+		},
+		{
+			"from": [7, 6, 6],
+			"to": [9, 8, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [7, 7, 7]},
+			"faces": {
+				"north": {"uv": [0, 1.5, 1, 2.5], "texture": "#1"},
+				"east": {"uv": [1, 1.5, 3, 2.5], "texture": "#1"},
+				"south": {"uv": [2, 1.5, 3, 2.5], "texture": "#1"},
+				"west": {"uv": [2, 1.5, 4, 2.5], "texture": "#1"},
+				"up": {"uv": [6, 5.5, 7, 6.5], "texture": "#1"},
+				"down": {"uv": [4, 6.5, 5, 8.5], "texture": "#1"}
+			}
+		},
+		{
+			"name": "holder2",
+			"from": [3, 6, 7],
+			"to": [5, 10, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [3, 8, 7]},
+			"faces": {
+				"north": {"uv": [4, 4, 5, 6], "texture": "#1"},
+				"east": {"uv": [0, 5, 1, 7], "texture": "#1"},
+				"south": {"uv": [1, 5, 2, 7], "texture": "#1"},
+				"west": {"uv": [2, 5, 3, 7], "texture": "#1"},
+				"up": {"uv": [5, 6.5, 6, 7.5], "texture": "#1"},
+				"down": {"uv": [6, 6.5, 7, 7.5], "texture": "#1"}
+			}
+		},
+		{
+			"name": "holder0",
+			"from": [11, 6, 7],
+			"to": [13, 10, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [11, 8, 7]},
+			"faces": {
+				"north": {"uv": [3, 5, 4, 7], "texture": "#1"},
+				"east": {"uv": [5, 4, 6, 6], "texture": "#1"},
+				"south": {"uv": [6, 0, 7, 2], "texture": "#1"},
+				"west": {"uv": [6, 2, 7, 4], "texture": "#1"},
+				"up": {"uv": [0, 7, 1, 8], "texture": "#1"},
+				"down": {"uv": [7, 0, 8, 1], "texture": "#1"}
+			}
+		},
+		{
+			"from": [5, 6, 7],
+			"to": [7, 8, 9],
+			"rotation": {"angle": 0, "axis": "y", "origin": [4, 8, 7]},
+			"faces": {
+				"north": {"uv": [1, 7, 2, 8], "texture": "#1"},
+				"south": {"uv": [2, 7, 3, 8], "texture": "#1"},
+				"up": {"uv": [3, 7, 4, 8], "texture": "#1"},
+				"down": {"uv": [7, 3, 8, 4], "texture": "#1"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "group",
+			"origin": [8, 8, 7],
+			"scope": 0,
+			"color": 0,
+			"children": [0, 1, 2, 3, 4, 5, 6]
+		}
+	]
+}

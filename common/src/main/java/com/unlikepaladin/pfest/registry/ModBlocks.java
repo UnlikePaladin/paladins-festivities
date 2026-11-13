@@ -1,5 +1,6 @@
 package com.unlikepaladin.pfest.registry;
 
+import com.unlikepaladin.pfest.blocks.CandelabraBlock;
 import com.unlikepaladin.pfest.blocks.CoffinBlock;
 import com.unlikepaladin.pfest.blocks.CustomCarvedPumpkinBlock;
 import com.unlikepaladin.pfest.blocks.PumpkinCarvingStationBlock;
@@ -36,4 +37,20 @@ public class ModBlocks {
                             .sound(SoundType.WOOD)
                             .noOcclusion()),
                     block -> new BedItem(block, new Item.Properties().tab(CreativeModeTab.TAB_DECORATIONS)));
+
+    public static final Supplier<Block> GOLD_CANDELABRA =
+            RegistryHelper.registerBlockAndItem("gold_candelabra",
+                    () -> new CandelabraBlock(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.GOLD)
+                            .strength(2.0F, 3.0F)
+                            .sound(SoundType.LANTERN)
+                            .noOcclusion()
+                            .lightLevel(state -> state.getValue(CandelabraBlock.LIT) ? 5 * state.getValue(CandelabraBlock.CANDLES) : 0)));
+
+    public static final Supplier<Block> IRON_CANDELABRA =
+            RegistryHelper.registerBlockAndItem("iron_candelabra",
+                    () -> new CandelabraBlock(BlockBehaviour.Properties.of(Material.METAL, MaterialColor.METAL)
+                            .strength(2.0F, 3.0F)
+                            .sound(SoundType.LANTERN)
+                            .noOcclusion()
+                            .lightLevel(state -> state.getValue(CandelabraBlock.LIT) ? 5 * state.getValue(CandelabraBlock.CANDLES) : 0)));
 }

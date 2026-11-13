@@ -1,0 +1,8 @@
+{
+  "parent": "paladinsfestivities:block/candelabra_cobweb",
+  "textures": {
+    "1": "paladinsfestivities:block/iron_candelabra",
+    "3": "minecraft:block/cobweb",
+    "particle": "paladinsfestivities:block/iron_candelabra"
+  }
+}
