@@ -31,6 +31,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import java.util.List;
 import org.lwjgl.glfw.GLFW;
 
 public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarvingMenu> {
@@ -55,10 +56,14 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
             .withStyle(ChatFormatting.WHITE);
     private static final Component TOOL_SCOOP = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.scoop")
             .withStyle(ChatFormatting.WHITE);
-    private static final Component TOOL_LIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.lit")
+    private static final Component TOOL_PREVIEW = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.preview")
             .withStyle(ChatFormatting.WHITE);
-    private static final Component TOOL_UNLIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.unlit")
-            .withStyle(ChatFormatting.WHITE);
+    private static final Component PREVIEW_BANNER = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.preview_lit_banner")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+    private static final Component TOOL_PREVIEW_TOOLTIP_TITLE = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.preview.tooltip.title")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+    private static final Component TOOL_PREVIEW_TOOLTIP_DESC = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.preview.tooltip.desc")
+            .withStyle(ChatFormatting.GRAY);
 
     private static final Component FINISH_LABEL = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.finish")
             .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
@@ -73,6 +78,11 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
             .withStyle(ChatFormatting.DARK_GRAY);
     private static final Component CONTROLS_EXIT = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.controls.exit")
             .withStyle(ChatFormatting.DARK_GRAY);
+
+    private static final int SLOT_W = 54;
+    private static final int SLOT_H = 34;
+    private static final int SLOT_GAP = 6;
+    private static final int TOTAL_TOOLBAR_W = 4 * SLOT_W + 3 * SLOT_GAP;
 
     private static Component getKeyHint(KeyMapping mapping, ChatFormatting color) {
         return new TextComponent("[").append(mapping.getTranslatedKeyMessage()).append("]").withStyle(color);
@@ -126,9 +136,10 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         }
         this.openTime = System.currentTimeMillis();
 
+        this.previewLit = false;
         PumpkinCarvingStationBlockEntity station = getStationEntity();
         if (station != null) {
-            station.setPreviewLit(this.previewLit);
+            station.setPreviewLit(false);
         }
     }
 
@@ -212,6 +223,9 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
 
         // 5. Render active tool icon at mouse cursor (when over world)
         renderMouseTool(poseStack, mouseX, mouseY);
+
+        // 6. Tooltips
+        renderTooltips(poseStack, mouseX, mouseY);
     }
 
     @Override
@@ -358,7 +372,7 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
             if (mouseX >= this.width - 52 && mouseX < this.width - 16) return true;
         }
         // Controls guide card
-        if (this.showControlsCard && mouseX >= this.width - 142 && mouseY <= 96) return true;
+        if (this.showControlsCard && mouseX >= this.width - 154 && mouseY <= 108) return true;
         return false;
     }
 
@@ -375,6 +389,16 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
                 activeFace + 1
         ).withStyle(ChatFormatting.GRAY);
         drawCenteredString(poseStack, this.font, faceIndicator, this.width / 2, 24, 0xFFFFFFFF);
+
+        // 1b. Lit Preview Banner
+        if (this.previewLit) {
+            int textW = this.font.width(PREVIEW_BANNER);
+            int bannerX = this.width / 2 - textW / 2 - 8;
+            int bannerY = 36;
+            fill(poseStack, bannerX, bannerY, bannerX + textW + 16, bannerY + 14, 0xCC1A1005);
+            drawBorder(poseStack, bannerX, bannerY, textW + 16, 14, 0xFFFFB020);
+            drawCenteredString(poseStack, this.font, PREVIEW_BANNER, this.width / 2, bannerY + 3, 0xFFFFDF60);
+        }
 
         // 2. Turntable Side Arrows
         int arrowY = this.height / 2 - 16;
@@ -405,36 +429,34 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         drawCenteredString(poseStack, this.font, keyHint, x + w / 2, y + 19, 0xAAAAAA);
     }
 
-    private int getToolbarStartX(int totalW) {
+    private int getToolbarStartX() {
         int doneW = 104;
         int doneX = this.width - doneW - 16;
-        int startX = Math.min((this.width - totalW) / 2, doneX - totalW - 16);
+        int startX = Math.min((this.width - TOTAL_TOOLBAR_W) / 2, doneX - TOTAL_TOOLBAR_W - 16);
         return Math.max(8, startX);
     }
 
     private void renderToolbar(PoseStack poseStack, int mouseX, int mouseY) {
-        int slotW = 44;
-        int slotH = 34;
-        int gap = 6;
-        int totalW = 4 * slotW + 3 * gap;
-        int startX = getToolbarStartX(totalW);
+        int startX = getToolbarStartX();
         int startY = this.height - 44;
 
         // Shelf backing
-        fill(poseStack, startX - 8, startY - 4, startX + totalW + 8, startY + slotH + 4, 0xDD1C140E);
-        drawBorder(poseStack, startX - 8, startY - 4, totalW + 16, slotH + 8, 0xFF4A3525);
+        fill(poseStack, startX - 8, startY - 4, startX + TOTAL_TOOLBAR_W + 8, startY + SLOT_H + 4, 0xDD1C140E);
+        drawBorder(poseStack, startX - 8, startY - 4, TOTAL_TOOLBAR_W + 16, SLOT_H + 8, 0xFF4A3525);
 
         // Slot 1: Knife (Carve)
-        renderToolSlot(poseStack, startX, startY, slotW, slotH, TOOL_KNIFE, getKeyHint(ModKeyMappings.CARVE_TOOL_KNIFE, ChatFormatting.GOLD), !this.eraseMode, mouseX, mouseY);
+        renderToolSlot(poseStack, startX, startY, SLOT_W, SLOT_H, TOOL_KNIFE, getKeyHint(ModKeyMappings.CARVE_TOOL_KNIFE, ChatFormatting.GOLD), !this.eraseMode, mouseX, mouseY);
         // Slot 2: Spoon (Scoop/Erase)
-        renderToolSlot(poseStack, startX + slotW + gap, startY, slotW, slotH, TOOL_SCOOP, getKeyHint(ModKeyMappings.CARVE_TOOL_SCOOP, ChatFormatting.GOLD), this.eraseMode, mouseX, mouseY);
+        renderToolSlot(poseStack, startX + SLOT_W + SLOT_GAP, startY, SLOT_W, SLOT_H, TOOL_SCOOP, getKeyHint(ModKeyMappings.CARVE_TOOL_SCOOP, ChatFormatting.GOLD), this.eraseMode, mouseX, mouseY);
         // Slot 3: Brush/Chisel Size
         Component brushLabel = new TranslatableComponent("gui.paladinsfestivities.pumpkin_carving.tool.brush", this.brushSize)
                 .withStyle(ChatFormatting.WHITE);
-        renderToolSlot(poseStack, startX + (slotW + gap) * 2, startY, slotW, slotH, brushLabel, getKeyHint(ModKeyMappings.CARVE_BRUSH_SIZE, ChatFormatting.GOLD), false, mouseX, mouseY);
+        renderToolSlot(poseStack, startX + (SLOT_W + SLOT_GAP) * 2, startY, SLOT_W, SLOT_H, brushLabel, getKeyHint(ModKeyMappings.CARVE_BRUSH_SIZE, ChatFormatting.GOLD), false, mouseX, mouseY);
         // Slot 4: Candle (Lit Preview)
-        Component litLabel = this.previewLit ? TOOL_LIT : TOOL_UNLIT;
-        renderToolSlot(poseStack, startX + (slotW + gap) * 3, startY, slotW, slotH, litLabel, getKeyHint(ModKeyMappings.CARVE_TOGGLE_LIT, ChatFormatting.GOLD), this.previewLit, mouseX, mouseY);
+        Component previewKeyHint = new TextComponent("[").append(ModKeyMappings.CARVE_TOGGLE_LIT.getTranslatedKeyMessage())
+                .append(this.previewLit ? " ON" : " OFF").append("]")
+                .withStyle(this.previewLit ? ChatFormatting.GREEN : ChatFormatting.GOLD);
+        renderToolSlot(poseStack, startX + (SLOT_W + SLOT_GAP) * 3, startY, SLOT_W, SLOT_H, TOOL_PREVIEW, previewKeyHint, this.previewLit, mouseX, mouseY);
     }
 
     private void renderToolSlot(PoseStack poseStack, int x, int y, int w, int h, Component label, Component key, boolean active, int mouseX, int mouseY) {
@@ -467,8 +489,8 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
     }
 
     private void renderControlsCard(PoseStack poseStack) {
-        int w = 126;
-        int h = 80;
+        int w = 138;
+        int h = 92;
         int x = this.width - w - 12;
         int y = 12;
 
@@ -483,16 +505,31 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
 
         Component toolControls = new TranslatableComponent(
                 "gui.paladinsfestivities.pumpkin_carving.controls.tools",
-                ModKeyMappings.CARVE_TOOL_KNIFE.getTranslatedKeyMessage(),
+                new TextComponent("1-3")
+        ).withStyle(ChatFormatting.DARK_GRAY);
+
+        Component previewControls = new TranslatableComponent(
+                "gui.paladinsfestivities.pumpkin_carving.controls.preview",
                 ModKeyMappings.CARVE_TOGGLE_LIT.getTranslatedKeyMessage()
         ).withStyle(ChatFormatting.DARK_GRAY);
 
         this.font.draw(poseStack, CONTROLS_TITLE, x + 8, y + 6, 0x222222);
-        this.font.draw(poseStack, CONTROLS_CARVE, x + 8, y + 20, 0x333333);
-        this.font.draw(poseStack, CONTROLS_SPIN, x + 8, y + 32, 0x333333);
-        this.font.draw(poseStack, turnControls, x + 8, y + 44, 0x333333);
-        this.font.draw(poseStack, toolControls, x + 8, y + 56, 0x333333);
-        this.font.draw(poseStack, CONTROLS_EXIT, x + 8, y + 68, 0x333333);
+        this.font.draw(poseStack, CONTROLS_CARVE, x + 8, y + 19, 0x333333);
+        this.font.draw(poseStack, CONTROLS_SPIN, x + 8, y + 31, 0x333333);
+        this.font.draw(poseStack, turnControls, x + 8, y + 43, 0x333333);
+        this.font.draw(poseStack, toolControls, x + 8, y + 55, 0x333333);
+        this.font.draw(poseStack, previewControls, x + 8, y + 67, 0x333333);
+        this.font.draw(poseStack, CONTROLS_EXIT, x + 8, y + 79, 0x333333);
+    }
+
+    private void renderTooltips(PoseStack poseStack, int mouseX, int mouseY) {
+        int startX = getToolbarStartX();
+        int startY = this.height - 44;
+        int slot4X = startX + (SLOT_W + SLOT_GAP) * 3;
+
+        if (mouseX >= slot4X && mouseX < slot4X + SLOT_W && mouseY >= startY && mouseY < startY + SLOT_H) {
+            renderComponentTooltip(poseStack, List.of(TOOL_PREVIEW_TOOLTIP_TITLE, TOOL_PREVIEW_TOOLTIP_DESC), mouseX, mouseY);
+        }
     }
 
     private void renderMouseTool(PoseStack poseStack, int mouseX, int mouseY) {
@@ -547,27 +584,23 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         }
 
         // 2. Check toolbar slots
-        int slotW = 44;
-        int slotH = 34;
-        int gap = 6;
-        int totalW = 4 * slotW + 3 * gap;
-        int startX = getToolbarStartX(totalW);
+        int startX = getToolbarStartX();
         int startY = this.height - 44;
 
-        if (mouseY >= startY && mouseY < startY + slotH) {
-            if (mouseX >= startX && mouseX < startX + slotW) {
+        if (mouseY >= startY && mouseY < startY + SLOT_H) {
+            if (mouseX >= startX && mouseX < startX + SLOT_W) {
                 this.eraseMode = false;
                 playUiClick();
                 return true;
-            } else if (mouseX >= startX + slotW + gap && mouseX < startX + (slotW + gap) + slotW) {
+            } else if (mouseX >= startX + SLOT_W + SLOT_GAP && mouseX < startX + (SLOT_W + SLOT_GAP) + SLOT_W) {
                 this.eraseMode = true;
                 playUiClick();
                 return true;
-            } else if (mouseX >= startX + (slotW + gap) * 2 && mouseX < startX + (slotW + gap) * 2 + slotW) {
+            } else if (mouseX >= startX + (SLOT_W + SLOT_GAP) * 2 && mouseX < startX + (SLOT_W + SLOT_GAP) * 2 + SLOT_W) {
                 this.brushSize = (this.brushSize % 3) + 1;
                 playUiClick();
                 return true;
-            } else if (mouseX >= startX + (slotW + gap) * 3 && mouseX < startX + (slotW + gap) * 3 + slotW) {
+            } else if (mouseX >= startX + (SLOT_W + SLOT_GAP) * 3 && mouseX < startX + (SLOT_W + SLOT_GAP) * 3 + SLOT_W) {
                 toggleLitPreview();
                 return true;
             }
@@ -755,8 +788,10 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
     private void finishCarving() {
         PumpkinCarvingStationBlockEntity station = getStationEntity();
         if (station != null) {
+            station.setPreviewLit(false);
             NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
         }
+        this.previewLit = false;
         // Send all 4 faces before finishing
         for (int f = 0; f < 4; f++) {
             byte[] faceBytes = this.menu.getData().getFaceBytes(f);
@@ -802,8 +837,10 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
         PumpkinCarvingStationBlockEntity station = getStationEntity();
         if (station != null) {
             station.clearHoverInfo();
+            station.setPreviewLit(false);
             NetworkPlatform.sendRotationToServer(this.menu.getPos(), station.getTargetTurntableAngle());
         }
+        this.previewLit = false;
         flushCarvePackets();
         NetworkPlatform.sendOccupiedToServer(this.menu.getPos(), false);
         super.onClose();
@@ -812,6 +849,12 @@ public class PumpkinCarvingScreen extends AbstractContainerScreen<PumpkinCarving
     @Override
     public void removed() {
         restoreCursor();
+        PumpkinCarvingStationBlockEntity station = getStationEntity();
+        if (station != null) {
+            station.clearHoverInfo();
+            station.setPreviewLit(false);
+        }
+        this.previewLit = false;
         super.removed();
     }
 }

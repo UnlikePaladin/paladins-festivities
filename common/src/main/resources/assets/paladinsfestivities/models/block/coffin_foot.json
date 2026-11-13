@@ -1,10 +1,11 @@
 {
 	"format_version": "1.9.0",
 	"credit": "By UnlikePaladin",
-	"parent": "block/template_bed",
+	"parent": "minecraft:block/block",
 	"texture_size": [64, 64],
 	"textures": {
-		"12": "paladinsfestivities:block/coffin"
+		"12": "paladinsfestivities:block/coffin",
+		"particle": "paladinsfestivities:block/coffin"
 	},
 	"elements": [
 		{

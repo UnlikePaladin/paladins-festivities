@@ -7,6 +7,8 @@ out/
 .gradle/
 output/
 bin/
+graphify-out
+.agents
 
 libs/other-deps
 .classpath

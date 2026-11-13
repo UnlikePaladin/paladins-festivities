@@ -3,6 +3,8 @@
   "block.paladinsfestivities.custom_carved_pumpkin": "Carved Pumpkin",
   "item.paladinsfestivities.custom_carved_pumpkin": "Carved Pumpkin",
   "container.paladinsfestivities.pumpkin_carving_station": "Pumpkin Carving Station",
+  "block.paladinsfestivities.coffin": "Coffin",
+  "item.paladinsfestivities.coffin": "Coffin",
 
   "gui.paladinsfestivities.pumpkin_carving.title": "Pumpkin Carving Table",
   "gui.paladinsfestivities.pumpkin_carving.face.front": "Front Face",
@@ -14,8 +16,12 @@
   "gui.paladinsfestivities.pumpkin_carving.tool.knife": "Knife",
   "gui.paladinsfestivities.pumpkin_carving.tool.scoop": "Scoop",
   "gui.paladinsfestivities.pumpkin_carving.tool.brush": "%1$sx%1$s",
-  "gui.paladinsfestivities.pumpkin_carving.tool.lit": "Lit",
-  "gui.paladinsfestivities.pumpkin_carving.tool.unlit": "Unlit",
+  "gui.paladinsfestivities.pumpkin_carving.tool.preview": "Preview",
+  "gui.paladinsfestivities.pumpkin_carving.tool.lit": "Preview: ON",
+  "gui.paladinsfestivities.pumpkin_carving.tool.unlit": "Preview: OFF",
+  "gui.paladinsfestivities.pumpkin_carving.preview_lit_banner": "Preview: Lit (Client Only)",
+  "gui.paladinsfestivities.pumpkin_carving.tool.preview.tooltip.title": "Lit Preview (Client Only)",
+  "gui.paladinsfestivities.pumpkin_carving.tool.preview.tooltip.desc": "Preview illuminated look with candle or torch. Turns off upon leaving.",
 
   "gui.paladinsfestivities.pumpkin_carving.finish": "FINISH",
   "gui.paladinsfestivities.pumpkin_carving.finish.desc": "Carve Pumpkin",
@@ -24,7 +30,8 @@
   "gui.paladinsfestivities.pumpkin_carving.controls.carve": "- Left Click: Carve",
   "gui.paladinsfestivities.pumpkin_carving.controls.spin": "- Right Drag: Spin",
   "gui.paladinsfestivities.pumpkin_carving.controls.turn": "- %1$s / %2$s: Turn Face",
-  "gui.paladinsfestivities.pumpkin_carving.controls.tools": "- %1$s - %2$s: Tools",
+  "gui.paladinsfestivities.pumpkin_carving.controls.tools": "- %1$s: Knife / Scoop / Brush",
+  "gui.paladinsfestivities.pumpkin_carving.controls.preview": "- %1$s: Lit Preview",
   "gui.paladinsfestivities.pumpkin_carving.controls.exit": "- ESC: Exit",
 
   "keybindings.category.paladinsfestivities": "Paladin's Festivities",

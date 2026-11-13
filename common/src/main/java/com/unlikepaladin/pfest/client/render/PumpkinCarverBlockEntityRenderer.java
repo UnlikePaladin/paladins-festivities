@@ -7,6 +7,7 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.unlikepaladin.pfest.blocks.PumpkinCarvingStationBlock;
 import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
+import com.unlikepaladin.pfest.client.screens.PumpkinCarvingScreen;
 import com.unlikepaladin.pfest.data.CarvedPumpkinData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -78,7 +79,13 @@ public class PumpkinCarverBlockEntityRenderer implements BlockEntityRenderer<Pum
         };
 
         if (!data.isEmpty()) {
-            boolean isLit = blockEntity.isPreviewLit();
+            boolean isLit = false;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.screen instanceof PumpkinCarvingScreen screen && blockEntity.isPreviewLit()) {
+                if (screen.getMenu() != null && blockEntity.getBlockPos().equals(screen.getMenu().getPos())) {
+                    isLit = true;
+                }
+            }
             int overlayLight = isLit ? net.minecraft.client.renderer.LightTexture.FULL_BRIGHT : renderLight;
 
             for (int i = 0; i < 4; i++) {
