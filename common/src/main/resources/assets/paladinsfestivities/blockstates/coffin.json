@@ -1,23 +1,43 @@
 {
   "variants": {
-    "facing=north,occupied=false,part=head": { "model": "paladinsfestivities:block/coffin_head" },
-    "facing=east,occupied=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 90 },
-    "facing=south,occupied=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 180 },
-    "facing=west,occupied=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 270 },
+    "facing=north,occupied=false,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head" },
+    "facing=north,occupied=false,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open" },
+    "facing=north,occupied=true,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head_open" },
+    "facing=north,occupied=true,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open" },
 
-    "facing=north,occupied=true,part=head": { "model": "paladinsfestivities:block/coffin_head" },
-    "facing=east,occupied=true,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 90 },
-    "facing=south,occupied=true,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 180 },
-    "facing=west,occupied=true,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 270 },
+    "facing=east,occupied=false,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 90 },
+    "facing=east,occupied=false,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 90 },
+    "facing=east,occupied=true,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 90 },
+    "facing=east,occupied=true,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 90 },
 
-    "facing=north,occupied=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot" },
-    "facing=east,occupied=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 90 },
-    "facing=south,occupied=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 180 },
-    "facing=west,occupied=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 270 },
+    "facing=south,occupied=false,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 180 },
+    "facing=south,occupied=false,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 180 },
+    "facing=south,occupied=true,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 180 },
+    "facing=south,occupied=true,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 180 },
 
-    "facing=north,occupied=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot" },
-    "facing=east,occupied=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 90 },
-    "facing=south,occupied=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 180 },
-    "facing=west,occupied=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 270 }
+    "facing=west,occupied=false,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head", "y": 270 },
+    "facing=west,occupied=false,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 270 },
+    "facing=west,occupied=true,open=false,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 270 },
+    "facing=west,occupied=true,open=true,part=head": { "model": "paladinsfestivities:block/coffin_head_open", "y": 270 },
+
+    "facing=north,occupied=false,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot" },
+    "facing=north,occupied=false,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot_open" },
+    "facing=north,occupied=true,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot" },
+    "facing=north,occupied=true,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot" },
+
+    "facing=east,occupied=false,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 90 },
+    "facing=east,occupied=false,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot_open", "y": 90 },
+    "facing=east,occupied=true,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 90 },
+    "facing=east,occupied=true,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 90 },
+
+    "facing=south,occupied=false,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 180 },
+    "facing=south,occupied=false,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot_open", "y": 180 },
+    "facing=south,occupied=true,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 180 },
+    "facing=south,occupied=true,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 180 },
+
+    "facing=west,occupied=false,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 270 },
+    "facing=west,occupied=false,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot_open", "y": 270 },
+    "facing=west,occupied=true,open=false,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 270 },
+    "facing=west,occupied=true,open=true,part=foot": { "model": "paladinsfestivities:block/coffin_foot", "y": 270 }
   }
 }
