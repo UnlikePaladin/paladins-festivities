@@ -3,6 +3,7 @@ package com.unlikepaladin.pfest.registry;
 import com.unlikepaladin.pfest.blocks.CandelabraBlock;
 import com.unlikepaladin.pfest.blocks.CoffinBlock;
 import com.unlikepaladin.pfest.blocks.CustomCarvedPumpkinBlock;
+import com.unlikepaladin.pfest.blocks.PotionCauldronBlock;
 import com.unlikepaladin.pfest.blocks.PumpkinCarvingStationBlock;
 import com.unlikepaladin.pfest.blocks.SkeletonPileBlock;
 import com.unlikepaladin.pfest.items.CustomCarvedPumpkinItem;
@@ -61,4 +62,8 @@ public class ModBlocks {
                             .strength(1.0F)
                             .sound(SoundType.BONE_BLOCK)
                             .noOcclusion()));
+
+    public static final Supplier<Block> POTION_CAULDRON =
+            RegistryHelper.registerBlockAndItem("potion_cauldron",
+                    () -> new PotionCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON)));
 }

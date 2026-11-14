@@ -15,6 +15,7 @@ public class RenderLayerRegistry {
         registerBlockToRenderLayer(ModBlocks.GOLD_CANDELABRA, RenderType.cutout());
         registerBlockToRenderLayer(ModBlocks.IRON_CANDELABRA, RenderType.cutout());
         registerBlockToRenderLayer(ModBlocks.SKELETON_PILE, RenderType.cutout());
+        registerBlockToRenderLayer(ModBlocks.POTION_CAULDRON, RenderType.translucent());
     }
 
     public static void registerBlockToRenderLayer(Supplier<? extends Block> blockSupplier, RenderType renderType) {

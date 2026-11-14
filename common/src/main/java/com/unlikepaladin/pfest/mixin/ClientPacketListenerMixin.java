@@ -2,6 +2,7 @@ package com.unlikepaladin.pfest.mixin;
 
 import com.unlikepaladin.pfest.blocks.blockentities.CandelabraBlockEntity;
 import com.unlikepaladin.pfest.blocks.blockentities.CustomCarvedPumpkinBlockEntity;
+import com.unlikepaladin.pfest.blocks.blockentities.PotionCauldronBlockEntity;
 import com.unlikepaladin.pfest.blocks.blockentities.PumpkinCarvingStationBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -30,6 +31,8 @@ public class ClientPacketListenerMixin {
                 carved.load(packet.getTag());
             } else if (be instanceof CandelabraBlockEntity candelabra) {
                 candelabra.load(packet.getTag());
+            } else if (be instanceof PotionCauldronBlockEntity potionCauldron) {
+                potionCauldron.load(packet.getTag());
             }
         }
     }
